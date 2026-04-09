@@ -1,21 +1,22 @@
 {
-  "name": "v0-sdk-monorepo",
-  "version": "0.8.0",
+  "name": "holy-monorepo",
+  "version": "0.1.0",
   "private": true,
-  "description": "Monorepo for v0 Platform SDKs",
-  "homepage": "https://v0.dev/docs/api",
+  "description": "Monorepo for Holy by Holystic Labs — vibecoding platform powered by HolyOS",
+  "homepage": "https://holy.holysticlabs.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vercel/v0-sdk.git"
+    "url": "https://github.com/holysticlabs/holy.git"
   },
   "scripts": {
     "build": "turbo build",
-    "build:packages": "turbo build --filter=@v0-sdk/* --filter=v0-sdk",
+    "build:packages": "turbo build --filter=holyos-sdk --filter=@holyos/* --filter=create-holy-app",
+    "build:holy": "turbo build --filter=holy",
     "dev": "turbo dev",
-    "lint": "turbo lint --filter=@v0-sdk/* --filter=v0-sdk --filter=create-v0-sdk-app",
-    "test": "turbo test --filter=@v0-sdk/* --filter=v0-sdk",
+    "lint": "turbo lint --filter=holyos-sdk --filter=@holyos/* --filter=create-holy-app",
+    "test": "turbo test --filter=holyos-sdk --filter=@holyos/*",
     "test:watch": "turbo test:watch",
-    "type-check": "turbo type-check --filter=@v0-sdk/* --filter=v0-sdk --filter=create-v0-sdk-app",
+    "type-check": "turbo type-check --filter=holyos-sdk --filter=@holyos/* --filter=create-holy-app",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
     "sdk:generate": "turbo run sdk:generate",

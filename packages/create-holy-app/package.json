@@ -1,0 +1,44 @@
+{
+  "name": "create-holy-app",
+  "version": "0.1.0",
+  "description": "Create Holy-powered apps with one command",
+  "bin": {
+    "create-holy-app": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'No linting configured for create-holy-app package'"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "prompts": "^2.4.2",
+    "picocolors": "^1.0.0",
+    "cross-spawn": "^7.0.3",
+    "fast-glob": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.0",
+    "@types/node": "^22.0.0",
+    "@types/prompts": "^2.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "holy",
+    "holyos",
+    "holystic-labs",
+    "create-app",
+    "cli"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  }
+}

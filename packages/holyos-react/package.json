@@ -1,0 +1,52 @@
+{
+  "name": "@holyos/react",
+  "version": "0.1.0",
+  "description": "React components and hooks for the HolyOS Platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "build": "bunchee",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "lint": "echo 'No linting configured for holyos-react package'"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || >=19.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "bunchee": "^6.6.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "holyos-sdk": "workspace:*"
+  },
+  "keywords": [
+    "holy",
+    "holyos",
+    "holystic-labs",
+    "react",
+    "sdk"
+  ],
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}
