@@ -8,7 +8,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Welcome back. Here&apos;s what&apos;s happening.
+          {"Welcome back. Here's what's happening."}
         </p>
       </div>
       <OverviewCards />
