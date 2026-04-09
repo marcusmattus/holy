@@ -16,7 +16,8 @@ export const BRAND = {
   },
 } as const
 
-export const API_BASE = process.env.NEXT_PUBLIC_HOLYOS_API_URL ?? 'https://api.holyos.io'
+export const API_BASE =
+  process.env.NEXT_PUBLIC_HOLYOS_API_URL ?? 'https://api.holyos.io'
 
 export const PLANS = ['free', 'pro', 'teams'] as const
 export type Plan = (typeof PLANS)[number]

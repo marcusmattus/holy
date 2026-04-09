@@ -1,4 +1,7 @@
-export async function trackEvent(event: string, properties?: Record<string, unknown>) {
+export async function trackEvent(
+  event: string,
+  properties?: Record<string, unknown>,
+) {
   if (typeof window === 'undefined') return
   console.debug('[HolyOS Analytics]', event, properties)
 }

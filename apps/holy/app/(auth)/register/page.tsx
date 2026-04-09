@@ -18,7 +18,9 @@ export default function RegisterPage() {
           <span className="font-semibold text-lg">Holy</span>
         </div>
         <h1 className="text-2xl font-bold">Create your account</h1>
-        <p className="text-sm text-muted-foreground mt-1">Start building with Holy today</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Start building with Holy today
+        </p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
@@ -59,7 +61,10 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="text-[#7C3AED] hover:underline font-medium">
+        <Link
+          href="/login"
+          className="text-[#7C3AED] hover:underline font-medium"
+        >
           Sign in
         </Link>
       </p>

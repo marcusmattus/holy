@@ -20,7 +20,9 @@ export function PreviewPane() {
       <div className="flex-1 flex items-start justify-center p-8 overflow-auto">
         <div className="w-full max-w-2xl rounded-xl border border-border overflow-hidden shadow-xl">
           <div className="py-24 px-4 text-center bg-gradient-to-b from-[#7C3AED]/20 to-transparent">
-            <h1 className="text-5xl font-bold mb-4 text-foreground">Build the future</h1>
+            <h1 className="text-5xl font-bold mb-4 text-foreground">
+              Build the future
+            </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-xl mx-auto">
               Powered by Holy — the vibecoding platform.
             </p>

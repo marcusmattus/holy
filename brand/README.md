@@ -4,16 +4,16 @@ Design tokens and brand guidelines for the Holy platform by Holystic Labs.
 
 ## Colors
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--holy-purple` | `#7C3AED` | Primary brand color, CTAs |
-| `--cosmic-blue` | `#2563EB` | Secondary accent, HolyOS |
-| `--neon-emerald` | `#10B981` | Success states, revenue |
-| `--deep-void` | `#0A0A0F` | Dark background |
-| `--surface` | `#18181B` | Card / panel backgrounds |
-| `--border-color` | `#27272A` | Borders and dividers |
-| `--soft-halo` | `#F8FAFC` | Light text / icons |
-| `--text-secondary` | `#A1A1AA` | Muted text |
+| Token              | Hex       | Usage                     |
+| ------------------ | --------- | ------------------------- |
+| `--holy-purple`    | `#7C3AED` | Primary brand color, CTAs |
+| `--cosmic-blue`    | `#2563EB` | Secondary accent, HolyOS  |
+| `--neon-emerald`   | `#10B981` | Success states, revenue   |
+| `--deep-void`      | `#0A0A0F` | Dark background           |
+| `--surface`        | `#18181B` | Card / panel backgrounds  |
+| `--border-color`   | `#27272A` | Borders and dividers      |
+| `--soft-halo`      | `#F8FAFC` | Light text / icons        |
+| `--text-secondary` | `#A1A1AA` | Muted text                |
 
 ## Brand Architecture
 

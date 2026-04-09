@@ -5,7 +5,9 @@
   "bin": {
     "create-holy-app": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
@@ -27,7 +29,13 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
-  "keywords": ["holy", "holyos", "holystic-labs", "create-app", "cli"],
+  "keywords": [
+    "holy",
+    "holyos",
+    "holystic-labs",
+    "create-app",
+    "cli"
+  ],
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22",

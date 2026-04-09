@@ -2,7 +2,7 @@ import type { APIEndpoint } from './openapi-parser'
 
 interface GenerateCodeOptions {
   endpoint: APIEndpoint
-  params: Record<string, any>
+  params: Record<string, unknown>
 }
 
 /**
@@ -130,7 +130,7 @@ export function generateCurlCode({
       endpoint.method === 'PUT' ||
       endpoint.method === 'PATCH')
   ) {
-    const body: Record<string, any> = {}
+    const body: Record<string, unknown> = {}
     bodyParams.forEach((param) => {
       const value = params[param.name]
       if (value !== undefined && value !== '') {
@@ -161,7 +161,7 @@ export function generateCurlCode({
 /**
  * Format a value for SDK code generation
  */
-function formatValue(value: any, schema?: any): string {
+function formatValue(value: unknown, schema?: Record<string, unknown>): string {
   if (value === null || value === undefined) {
     return 'undefined'
   }

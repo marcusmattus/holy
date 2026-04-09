@@ -10,11 +10,11 @@
 
 ### Brand Architecture
 
-| Layer | What it is |
-|-------|-----------|
-| **Holy** | The product — vibecoding platform, editor, store, dashboard |
-| **HolyOS** | The platform OS — runtime, analytics, rewards, API layer |
-| **Holystic Labs** | The company building Holy and HolyOS |
+| Layer             | What it is                                                  |
+| ----------------- | ----------------------------------------------------------- |
+| **Holy**          | The product — vibecoding platform, editor, store, dashboard |
+| **HolyOS**        | The platform OS — runtime, analytics, rewards, API layer    |
+| **Holystic Labs** | The company building Holy and HolyOS                        |
 
 ---
 
@@ -135,12 +135,12 @@ pnpm create holy-app
 
 ## Brand Colors
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Holy Purple | `#7C3AED` | Primary brand, CTAs |
-| Cosmic Blue | `#2563EB` | Secondary, HolyOS layer |
-| Neon Emerald | `#10B981` | Success, revenue |
-| Deep Void | `#0A0A0F` | Dark background |
+| Token        | Hex       | Usage                   |
+| ------------ | --------- | ----------------------- |
+| Holy Purple  | `#7C3AED` | Primary brand, CTAs     |
+| Cosmic Blue  | `#2563EB` | Secondary, HolyOS layer |
+| Neon Emerald | `#10B981` | Success, revenue        |
+| Deep Void    | `#0A0A0F` | Dark background         |
 
 ---
 

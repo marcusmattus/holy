@@ -12,7 +12,9 @@ export default function NewProjectPage() {
     <div className="max-w-lg space-y-6">
       <div>
         <h1 className="text-2xl font-bold">New Project</h1>
-        <p className="text-muted-foreground text-sm mt-1">Set up your Holy project</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Set up your Holy project
+        </p>
       </div>
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div className="space-y-2">

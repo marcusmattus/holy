@@ -4,7 +4,10 @@ const COMPONENTS = [
   { category: 'Layout', items: ['Hero', 'Navbar', 'Footer', 'Sidebar'] },
   { category: 'Data', items: ['Table', 'Chart', 'Stats Card', 'Timeline'] },
   { category: 'Forms', items: ['Login', 'Sign Up', 'Contact', 'Newsletter'] },
-  { category: 'Marketing', items: ['Pricing', 'Features', 'Testimonials', 'CTA'] },
+  {
+    category: 'Marketing',
+    items: ['Pricing', 'Features', 'Testimonials', 'CTA'],
+  },
 ]
 
 export function ComponentPalette() {
@@ -15,7 +18,9 @@ export function ComponentPalette() {
       </div>
       {COMPONENTS.map(({ category, items }) => (
         <div key={category}>
-          <div className="px-3 py-2 text-xs font-medium text-muted-foreground">{category}</div>
+          <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
+            {category}
+          </div>
           {items.map((item) => (
             <button
               key={item}

@@ -22,8 +22,9 @@ export function Hero() {
         </h1>
 
         <p className="text-lg md:text-xl text-[#A1A1AA] max-w-2xl mx-auto mb-10 leading-relaxed">
-          Holy is the vibecoding platform where you build, publish, and monetize web apps using AI.
-          Powered by HolyOS — the operating system for the next generation of builders.
+          Holy is the vibecoding platform where you build, publish, and monetize
+          web apps using AI. Powered by HolyOS — the operating system for the
+          next generation of builders.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

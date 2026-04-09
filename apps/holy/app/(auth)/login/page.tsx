@@ -17,7 +17,9 @@ export default function LoginPage() {
           <span className="font-semibold text-lg">Holy</span>
         </div>
         <h1 className="text-2xl font-bold">Welcome back</h1>
-        <p className="text-sm text-muted-foreground mt-1">Sign in to your Holy account</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Sign in to your Holy account
+        </p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
@@ -48,7 +50,10 @@ export default function LoginPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-[#7C3AED] hover:underline font-medium">
+        <Link
+          href="/register"
+          className="text-[#7C3AED] hover:underline font-medium"
+        >
           Sign up
         </Link>
       </p>

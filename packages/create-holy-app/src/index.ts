@@ -59,7 +59,11 @@ program
     const name = projectName ?? responses.name ?? 'my-holy-app'
     const template = responses.template ?? 'minimal'
 
-    console.log(pc.green(`\n✓ Creating ${pc.bold(name)} with template ${pc.bold(template)}\n`))
+    console.log(
+      pc.green(
+        `\n✓ Creating ${pc.bold(name)} with template ${pc.bold(template)}\n`,
+      ),
+    )
     console.log(pc.dim('  Next steps:'))
     console.log(pc.dim(`  1. cd ${name}`))
     console.log(pc.dim('  2. pnpm install'))

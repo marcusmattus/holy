@@ -13,9 +13,13 @@ export function WalletConnect() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            <span className="text-sm text-[#10B981] font-medium">Connected</span>
+            <span className="text-sm text-[#10B981] font-medium">
+              Connected
+            </span>
           </div>
-          <p className="font-mono text-xs text-muted-foreground break-all">{address}</p>
+          <p className="font-mono text-xs text-muted-foreground break-all">
+            {address}
+          </p>
           <div className="flex gap-3">
             <div className="flex-1 rounded-lg border border-border p-3 text-center">
               <p className="text-xs text-muted-foreground">USDC Balance</p>
@@ -36,7 +40,8 @@ export function WalletConnect() {
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Connect your wallet to receive on-chain USDC payouts from Holy Rewards.
+            Connect your wallet to receive on-chain USDC payouts from Holy
+            Rewards.
           </p>
           <button
             onClick={() => setConnected(true)}

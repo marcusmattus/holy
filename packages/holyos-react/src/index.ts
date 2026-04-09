@@ -2,7 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { createClient } from 'holyos-sdk'
-import type { HolyOSClient, HolyOSConfig, ProjectMetrics, Project } from 'holyos-sdk'
+import type {
+  HolyOSClient,
+  HolyOSConfig,
+  ProjectMetrics,
+  Project,
+} from 'holyos-sdk'
 
 const HolyOSContext = createContext<HolyOSClient | null>(null)
 
@@ -13,7 +18,11 @@ export interface HolyOSProviderProps {
 
 export function HolyOSProvider({ config, children }: HolyOSProviderProps) {
   const client = React.useMemo(() => createClient(config), [config])
-  return React.createElement(HolyOSContext.Provider, { value: client }, children)
+  return React.createElement(
+    HolyOSContext.Provider,
+    { value: client },
+    children,
+  )
 }
 
 export function useHolyOS(): HolyOSClient {
@@ -75,7 +84,7 @@ export function useProjects() {
 
   useEffect(() => {
     refresh()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client])
 
   return { projects, loading, refresh }
@@ -86,13 +95,18 @@ export interface AnalyticsTrackerProps {
   pageName?: string
 }
 
-export function AnalyticsTracker({ projectId, pageName }: AnalyticsTrackerProps) {
+export function AnalyticsTracker({
+  projectId,
+  pageName,
+}: AnalyticsTrackerProps) {
   const client = useHolyOS()
 
   useEffect(() => {
     client.analytics.track('page_view', {
       projectId,
-      page: pageName ?? (typeof window !== 'undefined' ? window.location.pathname : ''),
+      page:
+        pageName ??
+        (typeof window !== 'undefined' ? window.location.pathname : ''),
     })
   }, [client, projectId, pageName])
 

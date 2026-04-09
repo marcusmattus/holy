@@ -32,13 +32,41 @@ export function TrafficChart() {
       <ResponsiveContainer width="100%" height={240}>
         <LineChart data={DATA}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-          <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#A1A1AA' }} tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: '#A1A1AA' }} tickLine={false} axisLine={false} />
-          <Tooltip
-            contentStyle={{ background: '#18181B', border: '1px solid #27272A', borderRadius: 8, fontSize: 12 }}
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 11, fill: '#A1A1AA' }}
+            tickLine={false}
+            axisLine={false}
           />
-          <Line type="monotone" dataKey="views" stroke="#7C3AED" strokeWidth={2} dot={false} name="Views" />
-          <Line type="monotone" dataKey="visitors" stroke="#10B981" strokeWidth={2} dot={false} name="Visitors" />
+          <YAxis
+            tick={{ fontSize: 11, fill: '#A1A1AA' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              background: '#18181B',
+              border: '1px solid #27272A',
+              borderRadius: 8,
+              fontSize: 12,
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="views"
+            stroke="#7C3AED"
+            strokeWidth={2}
+            dot={false}
+            name="Views"
+          />
+          <Line
+            type="monotone"
+            dataKey="visitors"
+            stroke="#10B981"
+            strokeWidth={2}
+            dot={false}
+            name="Visitors"
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

@@ -14,8 +14,15 @@ export interface HolyOSClient {
 }
 
 export interface AuthNamespace {
-  signIn(email: string, password: string): Promise<{ token: string; user: User }>
-  signUp(email: string, password: string, name: string): Promise<{ token: string; user: User }>
+  signIn(
+    email: string,
+    password: string,
+  ): Promise<{ token: string; user: User }>
+  signUp(
+    email: string,
+    password: string,
+    name: string,
+  ): Promise<{ token: string; user: User }>
   signOut(): Promise<void>
   getSession(): Promise<Session | null>
   connectWallet(address: string): Promise<void>

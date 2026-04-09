@@ -40,5 +40,9 @@ export interface AnalyticsInsightInput {
 export interface AnalyticsInsightResult {
   summary: string
   recommendations: string[]
-  trends: Array<{ metric: string; trend: 'up' | 'down' | 'stable'; change: number }>
+  trends: Array<{
+    metric: string
+    trend: 'up' | 'down' | 'stable'
+    change: number
+  }>
 }

@@ -10,7 +10,9 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground text-sm mt-1">Track your platform performance</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Track your platform performance
+        </p>
       </div>
       <OverviewCards />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,8 +1,14 @@
 {
   "holy": {
     "purple": { "value": "#7C3AED", "usage": "Primary brand, CTAs, ring" },
-    "cosmicBlue": { "value": "#2563EB", "usage": "Secondary accent, HolyOS layer" },
-    "neonEmerald": { "value": "#10B981", "usage": "Success, revenue, realtime" },
+    "cosmicBlue": {
+      "value": "#2563EB",
+      "usage": "Secondary accent, HolyOS layer"
+    },
+    "neonEmerald": {
+      "value": "#10B981",
+      "usage": "Success, revenue, realtime"
+    },
     "deepVoid": { "value": "#0A0A0F", "usage": "Dark background" },
     "surface": { "value": "#18181B", "usage": "Cards, panels" },
     "border": { "value": "#27272A", "usage": "Borders, dividers" },

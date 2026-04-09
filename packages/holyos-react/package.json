@@ -12,7 +12,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "type-check": "tsc --noEmit",
     "build": "bunchee",
@@ -31,7 +33,13 @@
   "dependencies": {
     "holyos-sdk": "workspace:*"
   },
-  "keywords": ["holy", "holyos", "holystic-labs", "react", "sdk"],
+  "keywords": [
+    "holy",
+    "holyos",
+    "holystic-labs",
+    "react",
+    "sdk"
+  ],
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"

@@ -10,7 +10,8 @@ export function CTABanner() {
             Ready to start vibing?
           </h2>
           <p className="text-white/80 mb-8 max-w-xl mx-auto">
-            Join thousands of builders already using Holy to create, deploy, and monetize their apps.
+            Join thousands of builders already using Holy to create, deploy, and
+            monetize their apps.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link

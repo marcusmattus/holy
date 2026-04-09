@@ -15,16 +15,29 @@ export function TopPagesTable() {
       <table className="w-full text-sm">
         <thead className="border-b border-border bg-muted/50">
           <tr>
-            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Page</th>
-            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Views</th>
-            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Bounce Rate</th>
-            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Avg Duration</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              Page
+            </th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              Views
+            </th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              Bounce Rate
+            </th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              Avg Duration
+            </th>
           </tr>
         </thead>
         <tbody>
           {PAGES.map(({ path, views, bounce, duration }) => (
-            <tr key={path} className="border-b border-border last:border-0 hover:bg-muted/30">
-              <td className="px-4 py-3 font-mono text-xs text-[#7C3AED]">{path}</td>
+            <tr
+              key={path}
+              className="border-b border-border last:border-0 hover:bg-muted/30"
+            >
+              <td className="px-4 py-3 font-mono text-xs text-[#7C3AED]">
+                {path}
+              </td>
               <td className="px-4 py-3">{views.toLocaleString()}</td>
               <td className="px-4 py-3 text-muted-foreground">{bounce}</td>
               <td className="px-4 py-3 text-muted-foreground">{duration}</td>

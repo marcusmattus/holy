@@ -1,6 +1,10 @@
 import Link from 'next/link'
 
-export default function ProjectPage({ params }: { params: { projectId: string } }) {
+export default function ProjectPage({
+  params,
+}: {
+  params: { projectId: string }
+}) {
   const { projectId } = params
   const projectNames: Record<string, string> = {
     '1': 'Holy Commerce',
@@ -13,7 +17,9 @@ export default function ProjectPage({ params }: { params: { projectId: string } 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/dashboard/projects" className="hover:text-foreground">Projects</Link>
+        <Link href="/dashboard/projects" className="hover:text-foreground">
+          Projects
+        </Link>
         <span>/</span>
         <span className="text-foreground">{name}</span>
       </div>
@@ -40,7 +46,10 @@ export default function ProjectPage({ params }: { params: { projectId: string } 
           { label: 'Unique Visitors', value: '4,820' },
           { label: 'Revenue', value: '$840' },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-border bg-card p-4">
+          <div
+            key={label}
+            className="rounded-xl border border-border bg-card p-4"
+          >
             <p className="text-sm text-muted-foreground">{label}</p>
             <p className="text-2xl font-bold mt-1">{value}</p>
           </div>
@@ -50,7 +59,12 @@ export default function ProjectPage({ params }: { params: { projectId: string } 
         <h2 className="font-semibold mb-3">Deployment</h2>
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-          <span className="text-sm">Live at <a href="#" className="text-[#7C3AED] hover:underline">holy-commerce.holy.app</a></span>
+          <span className="text-sm">
+            Live at{' '}
+            <a href="#" className="text-[#7C3AED] hover:underline">
+              holy-commerce.holy.app
+            </a>
+          </span>
         </div>
       </div>
     </div>

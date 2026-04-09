@@ -20,14 +20,21 @@ export function RealtimeVisitors() {
         <span className="text-sm text-muted-foreground">Active now</span>
       </div>
       <p className="text-5xl font-bold text-[#10B981]">{count}</p>
-      <p className="text-sm text-muted-foreground mt-1">visitors on your apps</p>
+      <p className="text-sm text-muted-foreground mt-1">
+        visitors on your apps
+      </p>
       <div className="mt-4 space-y-2">
-        {['Holy Commerce', 'Neon Dashboard', 'Analytics Suite'].map((name, i) => (
-          <div key={name} className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{name}</span>
-            <span className="font-medium">{[28, 9, 5][i]}</span>
-          </div>
-        ))}
+        {['Holy Commerce', 'Neon Dashboard', 'Analytics Suite'].map(
+          (name, i) => (
+            <div
+              key={name}
+              className="flex items-center justify-between text-sm"
+            >
+              <span className="text-muted-foreground">{name}</span>
+              <span className="font-medium">{[28, 9, 5][i]}</span>
+            </div>
+          ),
+        )}
       </div>
     </div>
   )

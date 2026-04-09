@@ -11,10 +11,24 @@ export function Navbar() {
           <span className="font-semibold text-sm">Holy</span>
         </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-[#A1A1AA]">
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-          <Link href="#ecosystem" className="hover:text-white transition-colors">Ecosystem</Link>
-          <Link href="https://docs.holysticlabs.com" className="hover:text-white transition-colors">Docs</Link>
+          <Link href="/pricing" className="hover:text-white transition-colors">
+            Pricing
+          </Link>
+          <Link href="#features" className="hover:text-white transition-colors">
+            Features
+          </Link>
+          <Link
+            href="#ecosystem"
+            className="hover:text-white transition-colors"
+          >
+            Ecosystem
+          </Link>
+          <Link
+            href="https://docs.holysticlabs.com"
+            className="hover:text-white transition-colors"
+          >
+            Docs
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <Link

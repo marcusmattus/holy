@@ -45,7 +45,9 @@ export function CodePanel() {
           <div className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
           <div className="w-3 h-3 rounded-full bg-[#28C840]" />
         </div>
-        <span className="text-xs text-muted-foreground ml-2 font-mono">hero-section.tsx</span>
+        <span className="text-xs text-muted-foreground ml-2 font-mono">
+          hero-section.tsx
+        </span>
       </div>
       <textarea
         value={code}

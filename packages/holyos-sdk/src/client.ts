@@ -126,7 +126,9 @@ function createDeployNamespace(_config: HolyOSConfig): DeployNamespace {
 function getEnvApiKey(): string | undefined {
   // Safe cross-environment access (works in Node.js and browsers)
   if (typeof globalThis !== 'undefined' && 'process' in globalThis) {
-    const proc = (globalThis as Record<string, unknown>)['process'] as { env?: Record<string, string | undefined> } | undefined
+    const proc = (globalThis as Record<string, unknown>)['process'] as
+      | { env?: Record<string, string | undefined> }
+      | undefined
     return proc?.env?.['HOLYOS_API_KEY']
   }
   return undefined

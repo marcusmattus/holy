@@ -11,7 +11,9 @@ export default function RevenuePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Revenue</h1>
-          <p className="text-muted-foreground text-sm mt-1">Your earnings across the Holy ecosystem</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Your earnings across the Holy ecosystem
+          </p>
         </div>
         <Link
           href="/dashboard/revenue/rewards"

@@ -3,7 +3,15 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 
-const CATEGORIES = ['All', 'Analytics', 'Commerce', 'Auth', 'Content', 'Productivity', 'Business']
+const CATEGORIES = [
+  'All',
+  'Analytics',
+  'Commerce',
+  'Auth',
+  'Content',
+  'Productivity',
+  'Business',
+]
 
 export function SearchFilters() {
   const [search, setSearch] = useState('')
@@ -12,7 +20,10 @@ export function SearchFilters() {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <div className="relative flex-1">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
         <input
           type="text"
           value={search}
