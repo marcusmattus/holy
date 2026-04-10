@@ -28,12 +28,15 @@ export const themeAtom = atom<'light' | 'dark'>('dark')
 
 export const AI_MODELS = [
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai' },
+  { id: 'gpt-4o-mini', label: 'GPT-4o Mini', provider: 'openai' },
   { id: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'openai' },
-  { id: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', provider: 'openai' },
+  { id: 'o1-mini', label: 'o1 Mini', provider: 'openai' },
+  { id: 'o3-mini', label: 'o3 Mini', provider: 'openai' },
   { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet', provider: 'anthropic' },
-  { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus', provider: 'anthropic' },
+  { id: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku', provider: 'anthropic' },
   { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', provider: 'google' },
   { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'google' },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', provider: 'google' },
 ] as const
 
 export type AIModelId = (typeof AI_MODELS)[number]['id']

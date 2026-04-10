@@ -1,5 +1,5 @@
 import { streamText } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { createOpenAI, openai } from '@ai-sdk/openai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { google } from '@ai-sdk/google'
 
@@ -16,17 +16,40 @@ When asked to generate a component or page:
 
 When answering questions, be concise and practical. Always focus on website building best practices.`
 
+// GitHub Models — OpenAI-compatible endpoint, free with a GitHub PAT
+const githubModels = createOpenAI({
+  baseURL: 'https://models.inference.ai.azure.com',
+  apiKey: process.env.GITHUB_TOKEN ?? '',
+})
+
 function getModel(modelId: string) {
-  if (modelId.startsWith('gpt-')) {
-    return openai(modelId)
-  }
-  if (modelId.startsWith('claude-')) {
-    return anthropic(modelId)
-  }
+  // Google Gemini — always uses the Google AI API key
   if (modelId.startsWith('gemini-')) {
     return google(modelId)
   }
-  return openai('gpt-4o')
+
+  // OpenAI models: use direct key if available, fall back to GitHub Models
+  if (modelId.startsWith('gpt-') || modelId.startsWith('o1') || modelId.startsWith('o3')) {
+    if (process.env.OPENAI_API_KEY) {
+      return openai(modelId)
+    }
+    return githubModels(modelId)
+  }
+
+  // Anthropic (Claude) models: use direct key if available, fall back to GitHub Models
+  if (modelId.startsWith('claude-')) {
+    if (process.env.ANTHROPIC_API_KEY) {
+      return anthropic(modelId)
+    }
+    // GitHub Models uses the same model ID format for Claude
+    return githubModels(modelId)
+  }
+
+  // Default fallback
+  if (process.env.OPENAI_API_KEY) {
+    return openai('gpt-4o')
+  }
+  return githubModels('gpt-4o')
 }
 
 export async function POST(req: Request) {
