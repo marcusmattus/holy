@@ -1,12 +1,22 @@
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
+import crypto from 'crypto'
 import SystemHealthDashboard from '@/features/admin/components/SystemHealthDashboard'
 
 export const metadata = { title: 'Monitoring — Holy Admin' }
 
 export default async function MonitoringPage() {
   const headerStore = await headers()
-  if (headerStore.get('x-admin') !== 'true') {
+  const adminToken = process.env.HOLY_ADMIN_TOKEN
+  const bearerToken = headerStore.get('authorization')?.replace(/^Bearer\s+/i, '')
+
+  const validToken =
+    !!adminToken &&
+    !!bearerToken &&
+    adminToken.length === bearerToken.length &&
+    crypto.timingSafeEqual(Buffer.from(adminToken), Buffer.from(bearerToken))
+
+  if (!validToken) {
     notFound()
   }
 

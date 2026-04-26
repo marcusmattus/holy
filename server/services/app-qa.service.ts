@@ -1,4 +1,5 @@
 import { getProjectFileMap } from './project-file.service'
+import path from 'path'
 
 type CheckResult = {
   name: string
@@ -12,7 +13,7 @@ function detectBrokenImports(files: Record<string, string>) {
   const paths = new Set(Object.keys(files))
   let broken = 0
 
-  for (const [path, content] of Object.entries(files)) {
+  for (const [filePath, content] of Object.entries(files)) {
     const importMatches = content.matchAll(/from\s+['\"]([^'\"]+)['\"]/g)
     for (const match of importMatches) {
       const source = match[1]
@@ -20,8 +21,8 @@ function detectBrokenImports(files: Record<string, string>) {
         continue
       }
 
-      const baseDir = path.slice(0, path.lastIndexOf('/'))
-      const resolved = `${baseDir}/${source}`.replace(/\/\//g, '/')
+      const baseDir = path.posix.dirname(filePath)
+      const resolved = path.posix.normalize(path.posix.resolve(baseDir, source))
       const variants = [resolved, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}/index.tsx`]
 
       if (!variants.some((variant) => paths.has(variant))) {
@@ -66,7 +67,10 @@ export async function runProjectQa(projectId: string) {
   })
 
   const fullContent = Object.values(files).join('\n')
-  const secretLeak = /(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][^'\"]{8,}['\"]/i.test(fullContent)
+  const secretLeak =
+    /(api[_-]?key|secret|token|password)\s*[:=]\s*['"`][^'"`]{8,}['"`]/i.test(fullContent) ||
+    /AKIA[0-9A-Z]{16}/.test(fullContent) ||
+    /-----BEGIN (RSA|EC|OPENSSH|DSA) PRIVATE KEY-----/.test(fullContent)
   checks.push({
     name: 'Secret leakage',
     status: secretLeak ? 'FAIL' : 'PASS',
@@ -84,7 +88,8 @@ export async function runProjectQa(projectId: string) {
       : 'No dangerous scripts detected',
   })
 
-  const hasImgWithoutAlt = /<img\s+[^>]*>/i.test(fullContent) && !/alt=/i.test(fullContent)
+  const hasImgWithoutAlt =
+    /<img\b(?![^>]*\balt\s*=\s*['"][^'"]+['"])[^>]*>/i.test(fullContent)
   checks.push({
     name: 'Accessibility hints',
     status: hasImgWithoutAlt ? 'WARN' : 'PASS',

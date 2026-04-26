@@ -4,6 +4,7 @@ import { broadcastProjectPresence } from '@/server/realtime/presence.service'
 
 const ACTIVE_SESSION_WINDOW_MS = 1000 * 60 * 5
 const DEFAULT_LOCK_DURATION_MS = 1000 * 60 * 10
+const MAX_LOCK_DURATION_MS = 1000 * 60 * 30
 
 export async function assertProjectAccess(projectId: string, userId: string) {
   const project = await prisma.project.findUnique({
@@ -186,7 +187,11 @@ export async function acquireFileLock(input: {
     },
   })
 
-  const expiresAt = new Date(now.getTime() + (input.ttlMs ?? DEFAULT_LOCK_DURATION_MS))
+  const ttlMs = Math.min(
+    MAX_LOCK_DURATION_MS,
+    Math.max(60_000, input.ttlMs ?? DEFAULT_LOCK_DURATION_MS),
+  )
+  const expiresAt = new Date(now.getTime() + ttlMs)
 
   try {
     return await prisma.fileLock.create({
@@ -198,7 +203,14 @@ export async function acquireFileLock(input: {
       },
       include: { user: true },
     })
-  } catch {
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== 'P2002'
+    ) {
+      throw error
+    }
+
     return prisma.fileLock.findUnique({
       where: {
         projectId_filePath: {

@@ -6,6 +6,10 @@ export default function CreateTemplateModal({ projectId }: { projectId: string }
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [open, setOpen] = useState(false)
+  const [creatorId] = useState(() => {
+    if (typeof window === 'undefined') return 'anonymous-user'
+    return window.localStorage.getItem('holy_user_id') ?? 'anonymous-user'
+  })
 
   if (!open) {
     return (
@@ -38,7 +42,7 @@ export default function CreateTemplateModal({ projectId }: { projectId: string }
             await fetch(`/api/projects/${projectId}/template`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ creatorId: 'demo-user', title, description }),
+              body: JSON.stringify({ creatorId, title, description }),
             })
             setOpen(false)
             setTitle('')

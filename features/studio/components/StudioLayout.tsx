@@ -14,15 +14,25 @@ const DEFAULT_FILES: ProjectFiles = {
   '/App.tsx': 'export default function App() { return <div>Start</div> }',
 }
 
-const DEMO_PROJECT_ID = 'studio-demo'
-const DEMO_USER_ID = 'demo-user'
-
 export default function StudioLayout() {
   const [prompt, setPrompt] = useState('')
   const [files, setFiles] = useState<ProjectFiles>(DEFAULT_FILES)
   const [loading, setLoading] = useState(false)
   const [deploying, setDeploying] = useState(false)
   const [deployUrl, setDeployUrl] = useState<string | null>(null)
+  const [currentUserId] = useState(() => {
+    if (typeof window === 'undefined') return 'anonymous-user'
+    const existingUserId = window.localStorage.getItem('holy_user_id')
+    const nextUserId = existingUserId ?? crypto.randomUUID()
+    if (!existingUserId) {
+      window.localStorage.setItem('holy_user_id', nextUserId)
+    }
+    return nextUserId
+  })
+  const [currentProjectId] = useState(() => {
+    if (typeof window === 'undefined') return 'studio-demo'
+    return new URLSearchParams(window.location.search).get('projectId') ?? 'studio-demo'
+  })
 
   async function handleGenerate() {
     setLoading(true)
@@ -60,9 +70,9 @@ export default function StudioLayout() {
             <h1 className="text-sm font-semibold">Realtime collaboration</h1>
           </div>
           <div className="flex items-center gap-2">
-            <FileLockBadge filePath="/App.tsx" owner="demo-user" />
+            <FileLockBadge filePath="/App.tsx" owner={currentUserId} />
             <ComponentCommentButton onClick={() => {}} />
-            <CollaboratorAvatars projectId={DEMO_PROJECT_ID} userId={DEMO_USER_ID} />
+            <CollaboratorAvatars projectId={currentProjectId} userId={currentUserId} />
           </div>
         </div>
 
@@ -99,7 +109,7 @@ export default function StudioLayout() {
         </div>
       </div>
 
-      <StudioCommentsPanel projectId={DEMO_PROJECT_ID} userId={DEMO_USER_ID} />
+      <StudioCommentsPanel projectId={currentProjectId} userId={currentUserId} />
     </div>
   )
 }

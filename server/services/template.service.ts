@@ -1,4 +1,5 @@
-import { PriceType, TemplateStatus } from '@prisma/client'
+import { PriceType, TemplateStatus, UsageEventType } from '@prisma/client'
+import path from 'path'
 import { prisma } from '@/server/db/client'
 import { getProjectFileMap, upsertProjectFiles } from './project-file.service'
 import { ensureTemplatePublishPermission } from './collaboration.service'
@@ -15,13 +16,24 @@ function sanitizeFileMap(files: Record<string, string>) {
   const sanitized: Record<string, string> = {}
 
   for (const [rawPath, rawContent] of Object.entries(files)) {
-    const path = rawPath.trim().replace(/\\/g, '/').replace(/\.\./g, '')
-    if (!path.startsWith('/')) {
+    const normalizedPath = path.posix.normalize(rawPath.trim().replace(/\\/g, '/'))
+    const safePath = path.posix.resolve('/', normalizedPath)
+
+    if (
+      !normalizedPath.startsWith('/') ||
+      normalizedPath.includes('..') ||
+      safePath !== normalizedPath ||
+      normalizedPath.includes('\0')
+    ) {
       continue
     }
 
-    const content = rawContent.replace(/process\.env\.[A-Z0-9_]+/g, '"[REDACTED_ENV]"')
-    sanitized[path] = content
+    const content = rawContent
+      .replace(/process\.env\.[A-Za-z0-9_]+/g, '"[REDACTED_ENV]"')
+      .replace(/process\.env\[['"][A-Za-z0-9_]+['"]\]/g, '"[REDACTED_ENV]"')
+      .replace(/const\s*\{[^}]+\}\s*=\s*process\.env/g, 'const {} = process.env')
+
+    sanitized[safePath] = content
   }
 
   return sanitized
@@ -119,7 +131,7 @@ export async function forkTemplate(input: {
 
   const project = await prisma.project.create({
     data: {
-      name: input.projectName ?? `${template.title} Remix`,
+      name: input.projectName ?? `${template.title} Fork`,
       userId: input.userId,
       description: `Forked from template: ${template.title}`,
       status: 'DRAFT',
@@ -138,9 +150,26 @@ export async function forkTemplate(input: {
 
   await trackUsageEvent({
     userId: input.userId,
-    type: 'TEMPLATE_FORK',
+    type: UsageEventType.TEMPLATE_FORK,
     metadata: { templateId: template.id, projectId: project.id },
   })
 
   return project
+}
+
+export async function forkTemplateBySlug(input: {
+  slug: string
+  userId: string
+  projectName?: string
+}) {
+  const template = await prisma.template.findUniqueOrThrow({
+    where: { slug: input.slug },
+    select: { id: true },
+  })
+
+  return forkTemplate({
+    templateId: template.id,
+    userId: input.userId,
+    projectName: input.projectName,
+  })
 }

@@ -38,7 +38,7 @@ export function usePresence(projectId: string, userId: string) {
     }
 
     poll()
-    const interval = setInterval(poll, 10_000)
+    const interval = setInterval(poll, 5_000)
 
     return () => {
       cancelled = true

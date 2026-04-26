@@ -15,6 +15,10 @@ type TemplateDetailProps = {
 export default function TemplateDetail(props: TemplateDetailProps) {
   const [forking, setForking] = useState(false)
   const [forkedProjectId, setForkedProjectId] = useState<string | null>(null)
+  const [currentUserId] = useState(() => {
+    if (typeof window === 'undefined') return 'anonymous-user'
+    return window.localStorage.getItem('holy_user_id') ?? 'anonymous-user'
+  })
 
   return (
     <div className="rounded-xl border border-[#C9A24A]/30 bg-white/5 p-6 backdrop-blur space-y-4">
@@ -33,7 +37,7 @@ export default function TemplateDetail(props: TemplateDetailProps) {
           const response = await fetch(`/api/templates/${props.templateId}/fork`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: 'demo-user' }),
+            body: JSON.stringify({ userId: currentUserId }),
           })
 
           if (response.ok) {

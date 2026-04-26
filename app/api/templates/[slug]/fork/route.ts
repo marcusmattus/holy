@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { forkTemplate } from '@/server/services/template.service'
+import { forkTemplateBySlug } from '@/server/services/template.service'
 
 export async function POST(
   req: Request,
@@ -12,8 +12,8 @@ export async function POST(
     return NextResponse.json({ error: 'userId is required' }, { status: 400 })
   }
 
-  const project = await forkTemplate({
-    templateId: slug,
+  const project = await forkTemplateBySlug({
+    slug,
     userId: body.userId,
     projectName: body.projectName,
   })
