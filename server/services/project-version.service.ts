@@ -12,7 +12,6 @@ export async function createProjectVersion(input: {
     data: {
       projectId: input.projectId,
       filesJson: input.files,
-      code: JSON.stringify(input.files),
       prompt: input.prompt,
       summary: input.summary,
       label: input.label,

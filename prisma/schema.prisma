@@ -72,7 +72,7 @@ model ProjectVersion {
   spec       String?
   fileTree   Json?
   filesJson  Json?
-  code       String
+  code       String?
   createdAt  DateTime @default(now())
 }
 
@@ -379,8 +379,8 @@ model Install {
   listing     StoreListing @relation(fields: [listingId], references: [id])
   projectId   String?
   project     Project?     @relation(fields: [projectId], references: [id])
-  userId      String
-  user        User         @relation(fields: [userId], references: [id])
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
   pricePaid   Float?
   source      String?
   createdAt   DateTime     @default(now())

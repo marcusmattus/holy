@@ -127,7 +127,7 @@ export async function installListing(input: {
     data: {
       listingId: input.listingId,
       projectId: input.projectId,
-      userId: input.userId ?? 'anonymous',
+      userId: input.userId,
       source: input.source,
     },
   })
