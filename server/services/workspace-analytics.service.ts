@@ -13,9 +13,15 @@ export async function rebuildWorkspaceAnalyticsDaily(date = getUtcDateFloor()) {
     prisma.workspaceAnalyticsDaily.upsert({
       where: { workspaceId_date: { workspaceId: workspace.id, date } },
       update: {
-        installs: {
-          set: 0,
-        },
+        aiGenerations: 0,
+        aiPatches: 0,
+        deployments: 0,
+        storeViews: 0,
+        installs: 0,
+        purchases: 0,
+        revenueCents: 0,
+        apiRequests: 0,
+        activeUsers: 0,
       },
       create: {
         workspaceId: workspace.id,
