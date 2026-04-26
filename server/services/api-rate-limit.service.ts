@@ -51,15 +51,17 @@ export async function enforceApiKeyAndRateLimit(input: {
     },
   })
 
-  if (bucket.count >= bucket.limit) {
-    throw new Error('Rate limit exceeded')
-  }
-
-  const updated = await prisma.apiUsageBucket.update({
-    where: { id: bucket.id },
+  const incremented = await prisma.apiUsageBucket.updateMany({
+    where: { id: bucket.id, count: { lt: bucket.limit } },
     data: {
       count: { increment: 1 },
     },
+  })
+  if (incremented.count === 0) {
+    throw new Error('Rate limit exceeded')
+  }
+  const updated = await prisma.apiUsageBucket.findUniqueOrThrow({
+    where: { id: bucket.id },
   })
 
   await prisma.analyticsEvent.create({

@@ -7,8 +7,6 @@ import {
 } from '@prisma/client'
 import { prisma } from '@/server/services/prisma'
 
-type DecisionStatus = 'APPROVED' | 'REJECTED' | 'NEEDS_CHANGES'
-
 export async function queueComplianceReview(input: {
   targetType: ComplianceTargetType
   targetId: string
@@ -56,7 +54,7 @@ export async function listComplianceQueue() {
 
 export async function decideComplianceReview(input: {
   reviewId: string
-  status: DecisionStatus
+  status: ComplianceReviewStatus
   reviewedById?: string
   notes?: string
 }) {

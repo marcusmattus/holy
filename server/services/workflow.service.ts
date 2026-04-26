@@ -88,11 +88,35 @@ export async function runWorkflow(
 
   const createdSteps: WorkflowStepRun[] = []
   const autoApply = Boolean(options?.lowRiskAutoApplyEnabled)
+  let runFailed = false
   for (const step of steps) {
     const requiresApproval = requiresApprovalForStep(step, autoApply)
-    const status = requiresApproval
+    let status: WorkflowRunStatus = requiresApproval
       ? WorkflowRunStatus.WAITING_APPROVAL
       : WorkflowRunStatus.COMPLETED
+    let error: string | undefined
+    let output: Prisma.InputJsonValue | undefined = requiresApproval
+      ? undefined
+      : ({ executed: true } as Prisma.InputJsonValue)
+
+    if (!requiresApproval && step.type === WorkflowStepType.APPLY_PATCH) {
+      const projectId =
+        typeof step.input?.projectId === 'string' ? step.input.projectId : null
+      const patch = typeof step.input?.patch === 'string' ? step.input.patch : null
+      if (projectId && patch) {
+        try {
+          await prisma.projectVersion.create({
+            data: { projectId, code: patch },
+          })
+        } catch (stepError) {
+          status = WorkflowRunStatus.FAILED
+          error = stepError instanceof Error ? stepError.message : 'Patch apply failed'
+          output = undefined
+          runFailed = true
+        }
+      }
+    }
+
     const stepRun = await prisma.workflowStepRun.create({
       data: {
         workflowRunId: run.id,
@@ -101,23 +125,11 @@ export async function runWorkflow(
         input: step.input as Prisma.InputJsonValue | undefined,
         requiresApproval,
         status,
-        output: requiresApproval
-          ? undefined
-          : ({ executed: true } as Prisma.InputJsonValue),
+        output,
+        error,
       },
     })
     createdSteps.push(stepRun)
-
-    if (!requiresApproval && step.type === WorkflowStepType.APPLY_PATCH) {
-      const projectId =
-        typeof step.input?.projectId === 'string' ? step.input.projectId : null
-      const patch = typeof step.input?.patch === 'string' ? step.input.patch : null
-      if (projectId && patch) {
-        await prisma.projectVersion.create({
-          data: { projectId, code: patch },
-        })
-      }
-    }
   }
 
   const waitingApproval = createdSteps.some(
@@ -125,7 +137,13 @@ export async function runWorkflow(
   )
   const updatedRun = await prisma.workflowRun.update({
     where: { id: run.id },
-    data: waitingApproval
+    data: runFailed
+      ? {
+          status: WorkflowRunStatus.FAILED,
+          completedAt: new Date(),
+          error: 'One or more workflow steps failed',
+        }
+      : waitingApproval
       ? { status: WorkflowRunStatus.WAITING_APPROVAL }
       : {
           status: WorkflowRunStatus.COMPLETED,
