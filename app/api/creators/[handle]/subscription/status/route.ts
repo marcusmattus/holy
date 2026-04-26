@@ -6,8 +6,8 @@ type RouteParams = {
 }
 
 export async function GET(req: Request, { params }: RouteParams) {
-  const { handle } = await params
+  const { handle: creatorEmail } = await params
   const { userId } = getRequestContext(req)
-  const status = await getCreatorSubscriptionStatus(handle, userId)
+  const status = await getCreatorSubscriptionStatus(creatorEmail, userId)
   return Response.json(status)
 }

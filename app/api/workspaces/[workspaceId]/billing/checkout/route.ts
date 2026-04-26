@@ -13,6 +13,11 @@ export async function POST(req: Request, { params }: RouteParams) {
     return Response.json({ error: 'Invalid plan' }, { status: 400 })
   }
 
-  const session = createWorkspaceCheckoutSession(workspaceId, plan)
-  return Response.json(session)
+  try {
+    const session = await createWorkspaceCheckoutSession(workspaceId, plan)
+    return Response.json(session)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to create checkout session'
+    return Response.json({ error: message }, { status: 400 })
+  }
 }

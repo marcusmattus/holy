@@ -5,8 +5,8 @@ import SandboxPreview from "./SandboxPreview"
 import CollaborativeCodeEditor from "./CollaborativeCodeEditor"
 
 export default function StudioRuntime() {
-  const [code] = useState(`<div class='p-10'>Edit me</div>`)
   const [roomKey, setRoomKey] = useState<string | null>(null)
+  const [previewCode, setPreviewCode] = useState(`<div class='p-10'>Edit me</div>`)
   const projectId = "demo-project"
 
   useEffect(() => {
@@ -25,7 +25,12 @@ export default function StudioRuntime() {
       {/* Editor */}
       <div className="w-1/2 border-r border-[#C9A24A]/20">
         {roomKey ? (
-          <CollaborativeCodeEditor projectId={projectId} roomKey={roomKey} filePath="/App.tsx" />
+          <CollaborativeCodeEditor
+            projectId={projectId}
+            roomKey={roomKey}
+            filePath="/App.tsx"
+            onContentChange={setPreviewCode}
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-white/50">
             Booting realtime room…
@@ -35,7 +40,7 @@ export default function StudioRuntime() {
 
       {/* Live Preview */}
       <div className="w-1/2">
-        <SandboxPreview code={code} />
+        <SandboxPreview code={previewCode} />
       </div>
     </div>
   )

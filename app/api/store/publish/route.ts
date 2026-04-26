@@ -24,7 +24,12 @@ export async function POST(req: Request) {
   }
 
   if (latestQaRun.status === 'FAIL') {
-    return Response.json({ error: 'QA checks failed. Resolve issues before publish.' }, { status: 400 })
+    return Response.json(
+      {
+        error: `QA checks failed. Review the latest run via /api/projects/${projectId}/qa/run before publishing.`,
+      },
+      { status: 400 }
+    )
   }
 
   const listing = await prisma.storeListing.create({

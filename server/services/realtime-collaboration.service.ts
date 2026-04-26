@@ -9,7 +9,7 @@ export async function ensureRealtimeRoom(projectId: string, userId: string) {
     select: { id: true },
   })
   if (!membership) {
-    throw new Error('Forbidden: workspace membership required')
+    throw new Error('Forbidden: project access required')
   }
 
   return yjsProvider.createRoom(projectId)
@@ -21,7 +21,7 @@ export async function getRealtimeRoom(projectId: string, userId: string) {
     select: { id: true },
   })
   if (!membership) {
-    throw new Error('Forbidden: workspace membership required')
+    throw new Error('Forbidden: project access required')
   }
 
   return yjsProvider.getRoom(projectId)
@@ -38,7 +38,7 @@ export async function saveRealtimeSnapshot(
     select: { id: true },
   })
   if (!membership) {
-    throw new Error('Forbidden: workspace membership required')
+    throw new Error('Forbidden: project access required')
   }
 
   return prisma.$transaction(async (tx) => {

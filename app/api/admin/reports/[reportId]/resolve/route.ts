@@ -13,7 +13,10 @@ export async function POST(req: Request, { params }: RouteParams) {
 
   const { reportId } = await params
   const body = await req.json()
-  const action = body.action as 'HIDE_LISTING' | 'REMOVE_TEMPLATE' | 'DISMISS'
+  const action = body.action as 'HIDE_LISTING' | 'REMOVE_TEMPLATE' | 'DISMISS' | undefined
+  if (!action || !['HIDE_LISTING', 'REMOVE_TEMPLATE', 'DISMISS'].includes(action)) {
+    return Response.json({ error: 'Invalid action' }, { status: 400 })
+  }
 
   const report = await prisma.marketplaceReport.findUnique({ where: { id: reportId } })
   if (!report) {

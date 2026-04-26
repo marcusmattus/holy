@@ -4,6 +4,11 @@ import { generateGrowthSuggestions } from '@/server/agents/growth-agent'
 import { buildListingCopySuggestion } from '@/server/agents/listing-agent'
 import { buildPricingSuggestion } from '@/server/agents/pricing-agent'
 
+function listingPriceToCents(price: number | null | undefined) {
+  // StoreListing.price is stored in major units (e.g. 19.99 GBP), convert to cents for agents.
+  return price ? Math.round(price * 100) : 0
+}
+
 export async function runGrowthAgents({
   projectId,
   listingId,
@@ -15,52 +20,52 @@ export async function runGrowthAgents({
   const baseline = generateGrowthSuggestions({
     conversionRate: 0.02,
     bounceRate: 0.64,
-    priceCents: Math.round((listing?.price ?? 0) * 100),
+    priceCents: listingPriceToCents(listing?.price),
   })
 
-  const suggestions = [
-    ...baseline.map((item) => ({
+  const suggestions: Array<Parameters<typeof prisma.growthSuggestion.create>[0]['data']> = baseline.map((item) => ({
+    projectId,
+    listingId,
+    type: item.type as GrowthSuggestionType,
+    title: item.title,
+    description: item.description,
+    impact: SuggestionImpact.MEDIUM,
+    status: SuggestionStatus.PENDING,
+    metadata: { source: 'growth-agent' },
+  }))
+
+  if (listing) {
+    const listingSuggestion = buildListingCopySuggestion(listing.description)
+    suggestions.push({
       projectId,
       listingId,
-      type: item.type as GrowthSuggestionType,
-      title: item.title,
-      description: item.description,
+      type: GrowthSuggestionType.LISTING_COPY,
+      title: listingSuggestion.title,
+      description: listingSuggestion.description,
       impact: SuggestionImpact.MEDIUM,
       status: SuggestionStatus.PENDING,
-      metadata: { source: 'growth-agent' },
-    })),
-    listing
-      ? {
-          projectId,
-          listingId,
-          type: GrowthSuggestionType.LISTING_COPY,
-          title: buildListingCopySuggestion(listing.description).title,
-          description: buildListingCopySuggestion(listing.description).description,
-          impact: SuggestionImpact.MEDIUM,
-          status: SuggestionStatus.PENDING,
-          metadata: { source: 'listing-agent' },
-        }
-      : null,
-    listing?.price
-      ? {
-          projectId,
-          listingId,
-          type: GrowthSuggestionType.PRICING,
-          title: buildPricingSuggestion(Math.round(listing.price * 100)).title,
-          description: buildPricingSuggestion(Math.round(listing.price * 100)).description,
-          impact: SuggestionImpact.HIGH,
-          status: SuggestionStatus.PENDING,
-          patchJson: buildPricingSuggestion(Math.round(listing.price * 100)).patchJson,
-          metadata: { source: 'pricing-agent' },
-        }
-      : null,
-  ].filter(Boolean)
+      metadata: { source: 'listing-agent' },
+    })
+  }
+
+  if (listing?.price) {
+    const pricingSuggestion = buildPricingSuggestion(listingPriceToCents(listing.price))
+    suggestions.push({
+      projectId,
+      listingId,
+      type: GrowthSuggestionType.PRICING,
+      title: pricingSuggestion.title,
+      description: pricingSuggestion.description,
+      impact: SuggestionImpact.HIGH,
+      status: SuggestionStatus.PENDING,
+      patchJson: pricingSuggestion.patchJson,
+      metadata: { source: 'pricing-agent' },
+    })
+  }
 
   if (suggestions.length === 0) return []
 
-  return prisma.$transaction(
-    suggestions.map((suggestion) => prisma.growthSuggestion.create({ data: suggestion! }))
-  )
+  return prisma.$transaction(suggestions.map((suggestion) => prisma.growthSuggestion.create({ data: suggestion })))
 }
 
 export async function listGrowthSuggestions(projectId?: string, listingId?: string) {

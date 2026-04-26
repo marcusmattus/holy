@@ -1,8 +1,9 @@
 import { CreatorSubscriptionStatus } from '@prisma/client'
 import { prisma } from '@/server/db/prisma'
+import { getAppBaseUrl, getStripe } from '@/server/payments/stripe'
 
-export async function createCreatorSubscriptionCheckout(handle: string, subscriberId: string) {
-  const creator = await prisma.user.findUnique({ where: { email: handle } })
+export async function createCreatorSubscriptionCheckout(creatorEmail: string, subscriberId: string) {
+  const creator = await prisma.user.findUnique({ where: { email: creatorEmail } })
   if (!creator) {
     throw new Error('Creator not found')
   }
@@ -10,7 +11,32 @@ export async function createCreatorSubscriptionCheckout(handle: string, subscrib
     throw new Error('Cannot subscribe to yourself')
   }
 
-  const stripeCheckoutSessionId = `cs_creator_${creator.id}_${subscriberId}_${Date.now()}`
+  const stripe = getStripe()
+  const checkoutSession = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    success_url: `${getAppBaseUrl()}/dashboard/revenue?creatorSubscription=success`,
+    cancel_url: `${getAppBaseUrl()}/dashboard/revenue?creatorSubscription=cancelled`,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: 'gbp',
+          recurring: { interval: 'month' },
+          unit_amount: 999,
+          product_data: {
+            name: `Subscription to ${creator.email}`,
+          },
+        },
+      },
+    ],
+    metadata: {
+      type: 'creator_subscription',
+      creatorId: creator.id,
+      subscriberId,
+    },
+  })
+
+  const stripeCheckoutSessionId = checkoutSession.id
   const subscription = await prisma.creatorSubscription.upsert({
     where: {
       creatorId_subscriberId: {
@@ -31,13 +57,13 @@ export async function createCreatorSubscriptionCheckout(handle: string, subscrib
   })
 
   return {
-    checkoutUrl: `https://checkout.stripe.com/pay/${stripeCheckoutSessionId}`,
+    checkoutUrl: checkoutSession.url,
     subscriptionId: subscription.id,
   }
 }
 
-export async function getCreatorSubscriptionStatus(handle: string, subscriberId: string) {
-  const creator = await prisma.user.findUnique({ where: { email: handle } })
+export async function getCreatorSubscriptionStatus(creatorEmail: string, subscriberId: string) {
+  const creator = await prisma.user.findUnique({ where: { email: creatorEmail } })
   if (!creator) return { status: 'NONE' as const }
 
   const subscription = await prisma.creatorSubscription.findFirst({

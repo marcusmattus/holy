@@ -35,10 +35,17 @@ export function useRealtimeFile({
   const roomName = useMemo(() => `${roomKey}:${filePath}`, [filePath, roomKey])
 
   useEffect(() => {
+    const wsUrl = process.env.NEXT_PUBLIC_YJS_WS_URL
+    if (process.env.NODE_ENV === 'production' && !wsUrl) {
+      throw new Error(
+        'Missing required environment variable NEXT_PUBLIC_YJS_WS_URL. Set it before deploying to production.'
+      )
+    }
+
     const yDoc = new Y.Doc()
     yDocRef.current = yDoc
     const provider = new WebsocketProvider(
-      process.env.NEXT_PUBLIC_YJS_WS_URL ?? 'wss://demos.yjs.dev/ws',
+      wsUrl ?? 'ws://127.0.0.1:1234',
       roomName,
       yDoc
     )
@@ -91,8 +98,41 @@ export function useRealtimeFile({
   const setContent = (nextContent: string) => {
     const yText = yTextRef.current
     if (!yText) return
-    yText.delete(0, yText.length)
-    yText.insert(0, nextContent)
+    const current = yText.toString()
+    if (current === nextContent) return
+
+    // Compute a minimal change window by stripping the shared prefix/suffix.
+    // This preserves collaborative history and sends smaller Yjs operations
+    // than replacing the entire document on every keystroke.
+    let prefix = 0
+    while (
+      prefix < current.length &&
+      prefix < nextContent.length &&
+      current[prefix] === nextContent[prefix]
+    ) {
+      prefix += 1
+    }
+
+    let currentSuffix = current.length - 1
+    let nextSuffix = nextContent.length - 1
+    while (
+      currentSuffix >= prefix &&
+      nextSuffix >= prefix &&
+      current[currentSuffix] === nextContent[nextSuffix]
+    ) {
+      currentSuffix -= 1
+      nextSuffix -= 1
+    }
+
+    const deleteCount = currentSuffix - prefix + 1
+    if (deleteCount > 0) {
+      yText.delete(prefix, deleteCount)
+    }
+
+    const inserted = nextContent.slice(prefix, nextSuffix + 1)
+    if (inserted.length > 0) {
+      yText.insert(prefix, inserted)
+    }
   }
 
   const saveSnapshot = useCallback(async () => {

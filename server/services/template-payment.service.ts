@@ -1,5 +1,6 @@
 import { PurchaseStatus } from '@prisma/client'
 import { prisma } from '@/server/db/prisma'
+import { getAppBaseUrl, getStripe } from '@/server/payments/stripe'
 
 const PLATFORM_FEE_BPS = 1500
 
@@ -11,11 +12,34 @@ export async function createTemplateCheckoutSession(templateId: string, buyerId:
   if (!template.isPaid || template.priceCents <= 0) {
     return { free: true, checkoutUrl: null }
   }
-
   const amountCents = template.priceCents
+  // Basis points: 10_000 = 100% (1 bps = 0.01%).
   const creatorShareCents = Math.floor((amountCents * (10000 - PLATFORM_FEE_BPS)) / 10000)
   const platformFeeCents = amountCents - creatorShareCents
-  const stripeSessionId = `cs_${templateId}_${buyerId}_${Date.now()}`
+  const stripe = getStripe()
+  const checkoutSession = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    success_url: `${getAppBaseUrl()}/dashboard/store?templatePurchase=success`,
+    cancel_url: `${getAppBaseUrl()}/dashboard/store?templatePurchase=cancelled`,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: template.currency,
+          product_data: {
+            name: template.name,
+            description: template.description,
+          },
+          unit_amount: amountCents,
+        },
+      },
+    ],
+    metadata: {
+      type: 'template_purchase',
+      templateId,
+      buyerId,
+    },
+  })
 
   await prisma.templatePurchase.create({
     data: {
@@ -23,15 +47,15 @@ export async function createTemplateCheckoutSession(templateId: string, buyerId:
       buyerId,
       amountCents,
       currency: template.currency,
-      stripeSessionId,
+      stripeSessionId: checkoutSession.id,
       status: PurchaseStatus.PENDING,
     },
   })
 
   return {
     free: false,
-    checkoutUrl: `https://checkout.stripe.com/pay/${stripeSessionId}`,
-    stripeSessionId,
+    checkoutUrl: checkoutSession.url,
+    stripeSessionId: checkoutSession.id,
     creatorShareCents,
     platformFeeCents,
   }

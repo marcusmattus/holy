@@ -6,10 +6,10 @@ type RouteParams = {
 }
 
 export async function POST(req: Request, { params }: RouteParams) {
-  const { handle } = await params
+  const { handle: creatorEmail } = await params
   const { userId } = getRequestContext(req)
   try {
-    const session = await createCreatorSubscriptionCheckout(handle, userId)
+    const session = await createCreatorSubscriptionCheckout(creatorEmail, userId)
     return Response.json(session)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to start subscription checkout'

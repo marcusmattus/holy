@@ -6,14 +6,18 @@ import RealtimeStatusBar from '@/features/studio/components/RealtimeStatusBar'
 import PresenceCursorLayer from '@/features/studio/components/PresenceCursorLayer'
 import { useRealtimeFile } from '@/features/studio/realtime/useRealtimeFile'
 
+const AUTO_SAVE_DEBOUNCE_MS = 1500
+
 export default function CollaborativeCodeEditor({
   projectId,
   roomKey,
   filePath,
+  onContentChange,
 }: {
   projectId: string
   roomKey: string
   filePath: string
+  onContentChange?: (content: string) => void
 }) {
   const [autoSaveLabel, setAutoSaveLabel] = useState('Auto-save enabled')
   const { content, setContent, isConnected, isReconnecting, saveSnapshot } = useRealtimeFile({
@@ -31,9 +35,13 @@ export default function CollaborativeCodeEditor({
       setAutoSaveLabel('Saving…')
       await saveSnapshot()
       setAutoSaveLabel('Auto-saved')
-    }, 1500)
+    }, AUTO_SAVE_DEBOUNCE_MS)
     return () => clearTimeout(timeout)
   }, [content, saveSnapshot])
+
+  useEffect(() => {
+    onContentChange?.(content)
+  }, [content, onContentChange])
 
   return (
     <div className="flex h-full flex-col gap-2 bg-[#0A0A0A] p-3">
