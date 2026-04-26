@@ -1,28 +1,24 @@
 import Stripe from 'stripe'
-import { requireEnv } from '@/lib/env'
+import { env } from '@/lib/env'
+import { logger } from '@/lib/logger'
 
-let stripeClient: Stripe | null = null
+const stripeKey = env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder'
 
-export function getStripeClient() {
-  if (!stripeClient) {
-    const { STRIPE_SECRET_KEY } = requireEnv(['STRIPE_SECRET_KEY'])
-    stripeClient = new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: '2026-04-22.dahlia',
-    })
+if (!env.STRIPE_SECRET_KEY) {
+  const isProductionRuntime =
+    process.env.NODE_ENV === 'production' &&
+    process.env.NEXT_PHASE !== 'phase-production-build'
+
+  if (isProductionRuntime) {
+    throw new Error('Missing required environment variable: STRIPE_SECRET_KEY')
   }
 
-  return stripeClient
+  logger.warn({
+    event: 'stripe.client.placeholder_key',
+    message: 'Using placeholder Stripe key in non-production environment',
+  })
 }
 
-export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return Reflect.get(getStripeClient(), prop)
-  },
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is required')
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(stripeKey, {
   apiVersion: '2026-04-22.dahlia',
 })

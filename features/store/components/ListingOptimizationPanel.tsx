@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-type Optimization = {
+type OptimizationResult = {
   improvedTitle: string
   improvedDescription: string
   suggestedCategory: string
@@ -10,57 +10,35 @@ type Optimization = {
   conversionSuggestions: string[]
 }
 
-export function ListingOptimizationPanel({ slug }: { slug: string }) {
-  const [data, setData] = useState<Optimization | null>(null)
+export function ListingOptimizationPanel({ listingId }: { listingId: string }) {
+  const [result, setResult] = useState<OptimizationResult | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function loadOptimization() {
+  async function optimize() {
     setLoading(true)
-    const res = await fetch(`/api/store/${slug}/optimize`)
-    const json = await res.json()
-    setData(json)
+    const res = await fetch(`/api/store/${listingId}/optimize`, { method: 'POST' })
+    const data = (await res.json()) as OptimizationResult
+    setResult(data)
     setLoading(false)
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">AI Listing Optimization</h3>
-          <p className="text-xs text-muted-foreground">
-            Product and marketing recommendations for better listing conversion.
-          </p>
-        </div>
-        <button
-          onClick={loadOptimization}
-          className="rounded-lg bg-[#7C3AED] px-3 py-1.5 text-xs font-semibold text-white"
-          disabled={loading}
-        >
-          {loading ? 'Analyzing...' : 'Optimize'}
-        </button>
-      </div>
-      {data ? (
-        <div className="mt-4 space-y-2 text-xs text-muted-foreground">
-          <p>
-            <span className="font-semibold text-foreground">Improved title:</span>{' '}
-            {data.improvedTitle}
-          </p>
-          <p>
-            <span className="font-semibold text-foreground">Improved description:</span>{' '}
-            {data.improvedDescription}
-          </p>
-          <p>
-            <span className="font-semibold text-foreground">Category:</span>{' '}
-            {data.suggestedCategory}
-          </p>
-          <p>
-            <span className="font-semibold text-foreground">Pricing:</span>{' '}
-            {data.pricingSuggestion}
-          </p>
-          <ul className="list-disc pl-4">
-            {data.conversionSuggestions.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-5 space-y-4">
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">AI listing optimization</p>
+      <button
+        onClick={optimize}
+        disabled={loading}
+        className="rounded-lg border border-[#EAB308]/60 bg-[#EAB308]/20 px-4 py-2 text-sm font-semibold text-[#FDE68A] hover:bg-[#EAB308]/30 disabled:opacity-70"
+      >
+        {loading ? 'Optimizing…' : 'Run optimizer'}
+      </button>
+      {result ? (
+        <div className="space-y-2 text-sm">
+          <p><span className="text-muted-foreground">Improved title:</span> {result.improvedTitle}</p>
+          <p><span className="text-muted-foreground">Suggested category:</span> {result.suggestedCategory}</p>
+          <p><span className="text-muted-foreground">Pricing:</span> {result.pricingSuggestion}</p>
+          <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+            {result.conversionSuggestions.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </div>
       ) : null}

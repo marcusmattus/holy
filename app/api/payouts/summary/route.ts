@@ -1,24 +1,14 @@
 import { NextResponse } from 'next/server'
-import { getCreatorPayoutSummary } from '@/server/services/payout.service'
-import { prisma } from '@/server/db/client'
+import { getPayoutSummary } from '@/server/services/payout.service'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
-  const userId = searchParams.get('userId') ?? 'demo-user'
+  const userId = searchParams.get('userId')
 
-  const [summary, payoutAccount, payouts] = await Promise.all([
-    getCreatorPayoutSummary(userId),
-    prisma.creatorPayoutAccount.findUnique({ where: { userId } }),
-    prisma.payout.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    }),
-  ])
+  if (!userId) {
+    return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+  }
 
-  return NextResponse.json({
-    summary,
-    payoutAccount,
-    payouts,
-  })
+  const summary = await getPayoutSummary(userId)
+  return NextResponse.json(summary)
 }

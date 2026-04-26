@@ -1,137 +1,137 @@
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { prisma } from '@/server/db/client'
-import { getRelatedListings, getStoreListingBySlug } from '@/server/services/store-listing.service'
-import { ListingOptimizationPanel } from '@/features/store/components/ListingOptimizationPanel'
-import { logger } from '@/lib/logger'
+import { env } from '@/lib/env'
 
-type PageProps = {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<{ ref?: string }>
+export const dynamic = 'force-dynamic'
+
+type ListingData = {
+  id: string
+  title: string
+  description: string
+  slug: string
+  category: string
+  installs: number
+  views: number
+  price: number
+  exists: boolean
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
-  const listing = await getStoreListingBySlug(slug)
+async function getListingBySlug(slug: string): Promise<ListingData> {
+  const listing = await prisma.storeListing.findFirst({
+    where: {
+      OR: [{ slug }, { name: slug }],
+    },
+  })
 
   if (!listing) {
-    return { title: 'Listing not found | Holy Store' }
+    return {
+      id: slug,
+      title: slug.replace(/-/g, ' ').replace(/\b\w/g, (value) => value.toUpperCase()),
+      description: 'Creator app listing on Holy Store.',
+      slug,
+      category: 'Productivity',
+      installs: 0,
+      views: 0,
+      price: 0,
+      exists: false,
+    }
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://holy.holysticlabs.com'
+  return {
+    id: listing.id,
+    title: listing.title || listing.name,
+    description: listing.description,
+    slug: listing.slug || slug,
+    category: listing.category || 'Productivity',
+    installs: listing.installs,
+    views: listing.views,
+    price: listing.price || 0,
+    exists: true,
+  }
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<Metadata> {
+  const { slug } = await params
+  const listing = await getListingBySlug(slug)
+
+  const appUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const canonical = `${appUrl}/store/${listing.slug}`
 
   return {
     title: `${listing.title} | Holy Store`,
     description: listing.description,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+    },
     openGraph: {
       title: `${listing.title} | Holy Store`,
       description: listing.description,
       url: canonical,
-      images: [`${appUrl}/store/${listing.slug}/opengraph-image`],
+      images: [`${canonical}/opengraph-image`],
     },
   }
 }
 
-export default async function StoreListingPage({ params, searchParams }: PageProps) {
-  const [{ slug }, { ref }] = await Promise.all([params, searchParams])
-  const listing = await getStoreListingBySlug(slug)
-  if (!listing) notFound()
-
-  await prisma.analyticsEvent
-    .create({
-      data: {
-        eventType: 'LISTING_VIEW',
-        listingId: listing.id,
-        metadata: ref ? { referralCode: ref } : undefined,
-      },
-    })
-    .catch((error) => {
-      logger.warn('store_view_analytics_failed', {
-        listingId: listing.id,
-        error: error instanceof Error ? error.message : 'Unknown analytics error',
-      })
-    })
-
-  const related = await getRelatedListings(slug)
-
-  const ctaHref =
-    listing.price > 0
-      ? `/store/${slug}/success?purchase=1${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`
-      : `/store/${slug}/success?install=1${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`
-
-  return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-10">
-      <div className="rounded-2xl border border-white/10 bg-card p-6">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          {listing.category}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold">{listing.title}</h1>
-        <p className="mt-3 text-sm text-muted-foreground">{listing.description}</p>
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span>{listing.installs.toLocaleString()} installs</span>
-          <span>{listing.views.toLocaleString()} views</span>
-          <span>{(listing.conversionRate * 100).toFixed(1)}% conversion</span>
-          {ref ? <span>Referral: {ref}</span> : null}
-        </div>
-        <Link
-          href={ctaHref}
-          className="mt-6 inline-flex rounded-lg border border-[#D4AF37]/70 bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-black hover:bg-[#E3C35A]"
-        >
-          {listing.price > 0 ? `Buy for £${listing.price}` : 'Install for free'}
-        </Link>
-      </div>
-
-      <section className="space-y-3">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Related apps</p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {related.map((item) => (
-            <Link
-              key={item.id}
-              href={`/store/${item.slug}`}
-              className="rounded-xl border border-white/10 bg-card p-4 transition-colors hover:border-[#7C3AED]/50"
-            >
-              <p className="font-semibold">{item.title}</p>
-              <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <ListingOptimizationPanel slug={slug} />
-    </div>
-import { getListingBySlug } from '@/server/services/store.service'
-
-export default async function StoreListingPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function StoreListingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ ref?: string }>
+}) {
   const { slug } = await params
+  const { ref } = await searchParams
   const listing = await getListingBySlug(slug)
 
-  if (!listing) {
-    return (
-      <main className="min-h-screen bg-[#0A0A0A] p-10 text-white">
-        <p>Listing not found.</p>
-        <Link href="/store" className="text-[#C9A24A] underline">
-          Back to Store
-        </Link>
-      </main>
-    )
-  }
+  void prisma.analyticsEvent
+    .upsert({
+      where: {
+        idempotencyKey: `listing-view:${listing.id}:${ref ?? 'none'}`,
+      },
+      create: {
+        listingId: listing.exists ? listing.id : undefined,
+        eventType: ref ? 'REFERRAL' : 'VIEW',
+        referralCode: ref,
+        idempotencyKey: `listing-view:${listing.id}:${ref ?? 'none'}`,
+      },
+      update: {},
+    })
+    .catch(() => {})
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] p-10 text-white">
-      <article className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A24A]">Holy Store</p>
-        <h1 className="mt-4 text-4xl font-bold">{listing.title}</h1>
-        <p className="mt-4 text-white/60">{listing.description}</p>
-        <div className="mt-6 flex gap-3 text-xs uppercase tracking-widest text-white/50">
-          <span>{listing.category ?? 'App'}</span>
-          <span>•</span>
-          <span>{listing.priceType === 'FREE' ? 'Free' : `£${((listing.priceCents ?? 0) / 100).toFixed(2)}`}</span>
-          <span>•</span>
-          <span>{listing.installs?.length ?? 0} installs</span>
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{listing.category}</p>
+        <h1 className="text-3xl font-semibold mt-2">{listing.title}</h1>
+        <p className="mt-3 text-muted-foreground">{listing.description}</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Views {listing.views} · Installs {listing.installs}
+          {ref ? ` · Referral ${ref}` : ''}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={`/store/${listing.slug}/success?listingId=${listing.id}${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`}
+            className="rounded-lg border border-[#EAB308]/60 bg-[#EAB308]/20 px-4 py-2 text-sm font-semibold text-[#FDE68A] hover:bg-[#EAB308]/30"
+          >
+            {listing.price > 0 ? `Buy £${listing.price.toFixed(2)}` : 'Install app'}
+          </Link>
         </div>
-      </article>
-    </main>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Related apps</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {['Creator CRM', 'Growth Dashboard'].map((related) => (
+            <div key={related} className="rounded-xl border border-white/10 p-4">
+              <p className="font-medium">{related}</p>
+              <p className="text-sm text-muted-foreground mt-1">Recommended for teams building conversion loops.</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

@@ -8,7 +8,7 @@ import {
   Store,
   BarChart2,
   DollarSign,
-  Wallet,
+  Sparkles,
   Settings,
 } from 'lucide-react'
 
@@ -18,7 +18,7 @@ const NAV = [
   { href: '/dashboard/store', label: 'Store', icon: Store },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/dashboard/revenue', label: 'Revenue', icon: DollarSign },
-  { href: '/dashboard/creator', label: 'Creator', icon: Wallet },
+  { href: '/dashboard/creator', label: 'Creator', icon: Sparkles },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 

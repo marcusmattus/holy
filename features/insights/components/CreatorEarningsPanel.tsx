@@ -1,82 +1,107 @@
 'use client'
 
-type CreatorSummary = {
-  availableCents: number
-  pendingCents: number
-  paidOutCents: number
-  referralRevenueCents: number
-  currency: string
-  topAppsByRevenue: Array<{
-    listingId: string | null
-    revenueCents: number
+import { useEffect, useMemo, useState } from 'react'
+
+type SummaryResponse = {
+  availableBalance: number
+  pendingRevenueShares: number
+  paidOutTotal: number
+  payoutAccount: {
+    onboardingStatus: string
+    payoutsEnabled: boolean
+  } | null
+  payouts: Array<{
+    id: string
+    amountCents: number
+    currency: string
+    status: string
+    createdAt: string
   }>
 }
 
-function formatMoney(amountCents: number, currency: string) {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amountCents / 100)
-}
+export function CreatorEarningsPanel({
+  userId,
+  onLoaded,
+}: {
+  userId: string
+  onLoaded: (summary: SummaryResponse) => void
+}) {
+  const [summary, setSummary] = useState<SummaryResponse | null>(null)
 
-export function CreatorEarningsPanel({ summary }: { summary: CreatorSummary }) {
-  const total = summary.availableCents + summary.pendingCents + summary.paidOutCents
-  return (
-    <div className="rounded-2xl border border-white/15 bg-white/5 p-5 backdrop-blur-md">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        Creator earnings
-      </p>
-      <h2 className="mt-2 text-2xl font-semibold">{formatMoney(total, summary.currency)}</h2>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric
-          label="Available payout"
-          value={formatMoney(summary.availableCents, summary.currency)}
-        />
-        <Metric
-          label="Pending shares"
-          value={formatMoney(summary.pendingCents, summary.currency)}
-        />
-        <Metric
-          label="Paid out total"
-          value={formatMoney(summary.paidOutCents, summary.currency)}
-        />
-        <Metric
-          label="Referral revenue"
-          value={formatMoney(summary.referralRevenueCents, summary.currency)}
-        />
-      </div>
-      <div className="mt-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Top apps by revenue
-        </p>
-        <div className="mt-2 space-y-2">
-          {summary.topAppsByRevenue.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No revenue data yet.</p>
-          ) : (
-            summary.topAppsByRevenue.map((app) => (
-              <div
-                key={app.listingId ?? 'unknown'}
-                className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm"
-              >
-                <span>{app.listingId ?? 'Unmapped listing'}</span>
-                <span className="font-semibold">
-                  {formatMoney(app.revenueCents, summary.currency)}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+  useEffect(() => {
+    let cancelled = false
 
-function Metric({ label, value }: { label: string; value: string }) {
+    async function loadSummary() {
+      const res = await fetch(`/api/payouts/summary?userId=${encodeURIComponent(userId)}`)
+      if (!res.ok) {
+        return
+      }
+      const data = (await res.json()) as SummaryResponse
+      if (!cancelled) {
+        setSummary(data)
+        onLoaded(data)
+      }
+    }
+
+    loadSummary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [onLoaded, userId])
+
+  const metrics = useMemo(() => {
+    if (!summary) {
+      return [
+        { label: 'Total revenue', value: '—' },
+        { label: 'Available payout balance', value: '—' },
+        { label: 'Pending revenue shares', value: '—' },
+        { label: 'Paid out total', value: '—' },
+      ]
+    }
+
+    const totalRevenue =
+      summary.availableBalance + summary.pendingRevenueShares + summary.paidOutTotal
+
+    return [
+      { label: 'Total revenue', value: `£${(totalRevenue / 100).toFixed(2)}` },
+      {
+        label: 'Available payout balance',
+        value: `£${(summary.availableBalance / 100).toFixed(2)}`,
+      },
+      {
+        label: 'Pending revenue shares',
+        value: `£${(summary.pendingRevenueShares / 100).toFixed(2)}`,
+      },
+      { label: 'Paid out total', value: `£${(summary.paidOutTotal / 100).toFixed(2)}` },
+    ]
+  }, [summary])
+
+  async function requestPayout() {
+    await fetch('/api/payouts/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+    window.location.reload()
+  }
+
   return (
-    <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-      <p className="mt-2 text-lg font-medium">{value}</p>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {metrics.map((metric) => (
+          <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
+            <p className="mt-2 text-2xl font-semibold">{metric.value}</p>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={requestPayout}
+        className="rounded-lg border border-[#EAB308]/60 bg-[#EAB308]/20 px-4 py-2 text-sm font-semibold text-[#FDE68A] hover:bg-[#EAB308]/30"
+      >
+        Request payout
+      </button>
     </div>
   )
 }

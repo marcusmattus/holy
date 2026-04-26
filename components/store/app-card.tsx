@@ -2,7 +2,6 @@ import Link from 'next/link'
 
 export interface AppCardProps {
   id: string
-  slug?: string
   name: string
   description: string
   author: string
@@ -13,7 +12,7 @@ export interface AppCardProps {
 }
 
 export function AppCard({
-  slug,
+  id,
   name,
   description,
   author,
@@ -22,13 +21,6 @@ export function AppCard({
   downloads,
   category,
 }: AppCardProps) {
-  const listingSlug =
-    slug ??
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-
   return (
     <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-3 hover:border-[#7C3AED]/50 transition-colors">
       <div className="flex items-start justify-between">
@@ -55,7 +47,7 @@ export function AppCard({
           {price === 0 ? 'Free' : `$${price}`}
         </span>
         <Link
-          href={`/store/${listingSlug}`}
+          href={`/dashboard/store/${id}`}
           className="rounded-lg bg-[#7C3AED] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#6D28D9] transition-colors"
         >
           View

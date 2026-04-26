@@ -1,36 +1,38 @@
-import type { StoreListingView } from './store-listing.service'
+import { prisma } from '@/server/db/client'
 
-type ListingOptimizationResult = {
-  improvedTitle: string
-  improvedDescription: string
-  suggestedCategory: string
-  pricingSuggestion: string
-  conversionSuggestions: string[]
-}
+export async function optimizeListing(listingId: string) {
+  const listing = await prisma.storeListing.findUnique({
+    where: { id: listingId },
+  })
 
-export function optimizeListing(listing: StoreListingView): ListingOptimizationResult {
-  const conversionRate = listing.views > 0 ? listing.installs / listing.views : 0
-  const conversionPercent = (conversionRate * 100).toFixed(1)
-  const suggestedCategory =
-    listing.category === 'General' ? 'Productivity' : listing.category
+  if (!listing) {
+    throw new Error('Listing not found')
+  }
 
-  const pricingSuggestion =
-    listing.price <= 0
-      ? 'Test a low introductory paid tier (£9-£19) after gathering install intent.'
-      : conversionRate < 0.05
-        ? 'Consider testing a lower entry price or adding a free trial to increase conversion.'
-        : 'Current pricing appears reasonable; test value-framed bundles for higher average order value.'
+  const views = listing.views || 0
+  const installs = listing.installs || 0
+  const conversionRate = views > 0 ? installs / views : 0
+  const improvementSuffix =
+    'Built for quick setup, measurable outcomes, and repeatable growth loops.'
+  const improvedDescription = listing.description.includes(improvementSuffix)
+    ? listing.description
+    : `${listing.description} ${improvementSuffix}`
 
   return {
-    improvedTitle: `${listing.title} — Fast setup for ${listing.category.toLowerCase()} teams`,
-    improvedDescription: `${listing.description} Optimized onboarding, clearer outcomes, and a guided setup flow can improve install intent and activation.`,
-    suggestedCategory,
-    pricingSuggestion,
+    improvedTitle: listing.title || `${listing.name} for modern teams`,
+    improvedDescription,
+    suggestedCategory: listing.category || 'Productivity',
+    pricingSuggestion:
+      typeof listing.price === 'number' && listing.price > 0
+        ? `Test £${Math.max(1, Math.round(listing.price * 0.9))} launch pricing for higher trial conversion, then iterate weekly.`
+        : 'Start with a low-friction paid tier after proving value via a free install funnel.',
     conversionSuggestions: [
-      `Current conversion is ${conversionPercent}%. Highlight outcomes in the first sentence.`,
-      'Add social proof (ratings, install count, creator credibility) above the fold.',
-      'Use a short feature checklist with concrete benefits and activation steps.',
-      'Test CTA copy variants for install vs. buy intent with referral-aware tracking.',
+      conversionRate < 0.03
+        ? 'Improve the first line of the description to highlight the strongest user outcome.'
+        : 'Add social proof near the install CTA to sustain strong conversion.',
+      'Use screenshot captions focused on outcomes, not features.',
+      'A/B test a shorter title with the primary keyword at the beginning.',
+      'Add a clearer pricing explanation on what is included in each tier.',
     ],
   }
 }

@@ -3,7 +3,6 @@ import { AppCard } from './app-card'
 const APPS = [
   {
     id: '1',
-    slug: 'analytics-pro',
     name: 'Analytics Pro',
     description:
       'Advanced analytics dashboard with real-time data, heatmaps, and conversion funnels.',
@@ -15,7 +14,6 @@ const APPS = [
   },
   {
     id: '2',
-    slug: 'commerce-kit',
     name: 'Commerce Kit',
     description:
       'Full-featured e-commerce starter with cart, checkout, and inventory management.',
@@ -27,7 +25,6 @@ const APPS = [
   },
   {
     id: '3',
-    slug: 'auth-module',
     name: 'Auth Module',
     description:
       'Plug-and-play authentication with social login, 2FA, and role management.',
@@ -39,7 +36,6 @@ const APPS = [
   },
   {
     id: '4',
-    slug: 'blog-engine',
     name: 'Blog Engine',
     description:
       'MDX-powered blog with SEO, RSS, and tag-based filtering built in.',
@@ -51,7 +47,6 @@ const APPS = [
   },
   {
     id: '5',
-    slug: 'forms-builder',
     name: 'Forms Builder',
     description:
       'Drag-and-drop form builder with validation, conditional logic, and integrations.',
@@ -63,7 +58,6 @@ const APPS = [
   },
   {
     id: '6',
-    slug: 'crm-lite',
     name: 'CRM Lite',
     description:
       'Lightweight CRM with contacts, pipelines, and email sequences.',

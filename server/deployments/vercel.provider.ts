@@ -13,12 +13,13 @@ type VercelConfig = {
 export class VercelDeploymentProvider implements DeploymentProvider {
   constructor(private config: VercelConfig) {}
 
-  private withTeam(path: string) {
-    const url = new URL(`https://api.vercel.com${path}`)
-    if (this.config.teamId) {
-      url.searchParams.set('teamId', this.config.teamId)
+  private withTeam(url: string) {
+    if (!this.config.teamId) {
+      return url
     }
-    return url.toString()
+
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}teamId=${encodeURIComponent(this.config.teamId)}`
   }
 
   async createDeployment(input: DeploymentInput): Promise<DeploymentResult> {
@@ -27,7 +28,7 @@ export class VercelDeploymentProvider implements DeploymentProvider {
       data,
     }))
 
-    const res = await fetch(this.withTeam('/v13/deployments'), {
+    const res = await fetch(this.withTeam('https://api.vercel.com/v13/deployments'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.config.token}`,
@@ -38,7 +39,6 @@ export class VercelDeploymentProvider implements DeploymentProvider {
         project: this.config.projectId,
         files,
         target: input.target === 'production' ? 'production' : undefined,
-        env: input.env,
         projectSettings: {
           framework: 'nextjs',
         },
@@ -54,7 +54,7 @@ export class VercelDeploymentProvider implements DeploymentProvider {
       }
     }
 
-    const data = await res.json()
+    const data = (await res.json()) as { id: string; url?: string; readyState?: string }
 
     return {
       provider: 'vercel',
@@ -66,11 +66,14 @@ export class VercelDeploymentProvider implements DeploymentProvider {
   }
 
   async getDeploymentStatus(externalId: string): Promise<DeploymentResult> {
-    const res = await fetch(this.withTeam(`/v13/deployments/${externalId}`), {
-      headers: {
-        Authorization: `Bearer ${this.config.token}`,
+    const res = await fetch(
+      this.withTeam(`https://api.vercel.com/v13/deployments/${externalId}`),
+      {
+        headers: {
+          Authorization: `Bearer ${this.config.token}`,
+        },
       },
-    })
+    )
 
     if (!res.ok) {
       return {
@@ -81,20 +84,19 @@ export class VercelDeploymentProvider implements DeploymentProvider {
       }
     }
 
-    const data = await res.json()
-    const status =
-      data.readyState === 'READY'
-        ? 'READY'
-        : data.readyState === 'ERROR'
-          ? 'FAILED'
-          : 'BUILDING'
+    const data = (await res.json()) as { url?: string; readyState?: string }
 
     return {
       provider: 'vercel',
       externalId,
       url: data.url ? `https://${data.url}` : undefined,
-      status,
-      logs: [`Vercel status: ${data.readyState}`],
+      status:
+        data.readyState === 'READY'
+          ? 'READY'
+          : data.readyState === 'ERROR'
+            ? 'FAILED'
+            : 'BUILDING',
+      logs: [`Vercel status: ${data.readyState ?? 'UNKNOWN'}`],
     }
   }
 }

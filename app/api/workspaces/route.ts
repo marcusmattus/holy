@@ -1,43 +1,54 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/server/db/client'
 
-const DEMO_USER_ID = 'demo-user'
+export async function GET(req: Request) {
+  const userId = new URL(req.url).searchParams.get('userId')
+  if (!userId) {
+    return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+  }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-export async function GET() {
   const workspaces = await prisma.workspace.findMany({
     where: {
-      OR: [{ ownerId: DEMO_USER_ID }, { members: { some: { userId: DEMO_USER_ID } } }],
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
     },
-    include: { members: true },
+    include: {
+      members: true,
+    },
   })
-  return NextResponse.json({ workspaces })
+
+  return NextResponse.json(workspaces)
 }
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const name = String(body.name || '').trim()
-  if (!name) {
-    return NextResponse.json({ error: 'name is required' }, { status: 400 })
+  const { userId, name, slug } = (await req.json()) as {
+    userId?: string
+    name?: string
+    slug?: string
+  }
+
+  if (!userId || !name || !slug) {
+    return NextResponse.json({ error: 'userId, name and slug are required' }, { status: 400 })
   }
 
   const workspace = await prisma.workspace.create({
     data: {
       name,
-      slug: slugify(name),
-      ownerId: DEMO_USER_ID,
+      slug,
+      ownerId: userId,
       members: {
-        create: { userId: DEMO_USER_ID, role: 'OWNER' },
+        create: {
+          userId,
+          role: 'OWNER',
+        },
       },
+    },
+    include: {
+      members: true,
     },
   })
 
-  return NextResponse.json({ workspace }, { status: 201 })
+  return NextResponse.json(workspace)
 }

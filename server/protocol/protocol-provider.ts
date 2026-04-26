@@ -1,13 +1,15 @@
 export type SettlementInput = {
-  ledgerId: string
+  ledgerEntryId: string
   amountCents: number
   currency: string
+  recipientReference: string
 }
 
 export type SettlementResult = {
-  provider: string
-  status: 'simulated' | 'submitted' | 'failed'
+  provider: 'simulated' | 'base' | 'solana'
   txHash?: string
+  status: 'PENDING' | 'SETTLED' | 'FAILED'
+  message?: string
 }
 
 export interface ProtocolProvider {
@@ -18,8 +20,9 @@ class SimulatedProtocolProvider implements ProtocolProvider {
   async settle(input: SettlementInput): Promise<SettlementResult> {
     return {
       provider: 'simulated',
-      status: 'simulated',
-      txHash: `sim_${input.ledgerId}`,
+      txHash: `sim-${input.ledgerEntryId}`,
+      status: 'SETTLED',
+      message: 'Simulated settlement recorded. Ledger remains source of truth.',
     }
   }
 }

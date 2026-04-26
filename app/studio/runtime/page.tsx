@@ -1,5 +1,5 @@
-import { StudioShell } from '@/features/studio/components/StudioShell'
+import StudioRuntime from '@/features/studio/components/StudioRuntime'
 
 export default function RuntimePage() {
-  return <StudioShell />
+  return <StudioRuntime />
 }

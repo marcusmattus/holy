@@ -1,10 +1,26 @@
 import { prisma } from '@/server/db/client'
 import { stripe } from '@/server/stripe/client'
-import { requireEnv } from '@/lib/env'
+import { requireEnvVar } from '@/lib/env'
+
+async function ensureUser(userId: string) {
+  await prisma.user.upsert({
+    where: { id: userId },
+    update: {
+      email: `${userId}@internal.holy.local`,
+    },
+    create: {
+      id: userId,
+      email: `${userId}@internal.holy.local`,
+    },
+  })
+}
 
 export async function createOrGetPayoutAccount(userId: string) {
+  await ensureUser(userId)
   const existing = await prisma.creatorPayoutAccount.findUnique({ where: { userId } })
-  if (existing) return existing
+  if (existing) {
+    return existing
+  }
 
   const account = await stripe.accounts.create({
     type: 'express',
@@ -24,13 +40,13 @@ export async function createOrGetPayoutAccount(userId: string) {
 }
 
 export async function createPayoutOnboardingLink(userId: string) {
+  const appUrl = requireEnvVar('NEXT_PUBLIC_APP_URL')
   const account = await createOrGetPayoutAccount(userId)
-  const { NEXT_PUBLIC_APP_URL } = requireEnv(['NEXT_PUBLIC_APP_URL'])
 
   const link = await stripe.accountLinks.create({
     account: account.stripeAccountId,
-    refresh_url: `${NEXT_PUBLIC_APP_URL}/api/payouts/connect/refresh?userId=${userId}`,
-    return_url: `${NEXT_PUBLIC_APP_URL}/api/payouts/connect/return?userId=${userId}`,
+    refresh_url: `${appUrl}/api/payouts/connect/refresh?userId=${userId}`,
+    return_url: `${appUrl}/api/payouts/connect/return?userId=${userId}`,
     type: 'account_onboarding',
   })
 
@@ -43,7 +59,9 @@ export async function createPayoutOnboardingLink(userId: string) {
 }
 
 export async function syncPayoutAccount(userId: string) {
-  const payoutAccount = await prisma.creatorPayoutAccount.findUniqueOrThrow({ where: { userId } })
+  const payoutAccount = await prisma.creatorPayoutAccount.findUniqueOrThrow({
+    where: { userId },
+  })
   const account = await stripe.accounts.retrieve(payoutAccount.stripeAccountId)
 
   return prisma.creatorPayoutAccount.update({

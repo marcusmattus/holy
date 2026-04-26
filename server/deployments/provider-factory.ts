@@ -1,12 +1,13 @@
+import { env } from '@/lib/env'
 import { SimulatedDeploymentProvider } from './deployment-provider'
 import { VercelDeploymentProvider } from './vercel.provider'
 
 export function getDeploymentProvider() {
-  if (process.env.VERCEL_TOKEN && process.env.VERCEL_PROJECT_ID) {
+  if (env.VERCEL_TOKEN && env.VERCEL_PROJECT_ID) {
     return new VercelDeploymentProvider({
-      token: process.env.VERCEL_TOKEN,
-      teamId: process.env.VERCEL_TEAM_ID,
-      projectId: process.env.VERCEL_PROJECT_ID,
+      token: env.VERCEL_TOKEN,
+      teamId: env.VERCEL_TEAM_ID,
+      projectId: env.VERCEL_PROJECT_ID,
     })
   }
 

@@ -1,31 +1,38 @@
 import Link from 'next/link'
+import { prisma } from '@/server/db/client'
 
-type SuccessPageProps = {
-  searchParams: Promise<{ install?: string; purchase?: string; ref?: string }>
-}
+export default async function StoreListingSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ listingId?: string; ref?: string }>
+}) {
+  const { listingId, ref } = await searchParams
 
-export default async function ListingSuccessPage({ searchParams }: SuccessPageProps) {
-  const params = await searchParams
-  const action = params.purchase ? 'Purchase completed' : 'Install completed'
+  if (listingId) {
+    try {
+      await prisma.analyticsEvent.upsert({
+        where: {
+          idempotencyKey: `success:${listingId}:${ref ?? 'none'}`,
+        },
+        create: {
+          listingId,
+          eventType: 'INSTALL',
+          referralCode: ref,
+          idempotencyKey: `success:${listingId}:${ref ?? 'none'}`,
+          installEventKey: `install:${listingId}:${ref ?? 'none'}`,
+        },
+        update: {},
+      })
+    } catch {}
+  }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-20">
-      <div className="rounded-2xl border border-white/10 bg-card p-8 text-center">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          Holy Store
-        </p>
-        <h1 className="mt-3 text-2xl font-bold">{action}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Thanks for supporting creators on Holy.
-          {params.ref ? ` Referral applied: ${params.ref}.` : ''}
-        </p>
-        <Link
-          href="/dashboard/store"
-          className="mt-6 inline-flex rounded-lg border border-[#7C3AED]/60 px-4 py-2 text-sm font-medium hover:bg-[#7C3AED]/10"
-        >
-          Back to Store
-        </Link>
-      </div>
+    <div className="max-w-2xl mx-auto p-8 space-y-4">
+      <h1 className="text-3xl font-semibold">Install complete</h1>
+      <p className="text-muted-foreground">Your Holy Store install has been recorded successfully.</p>
+      <Link href="/dashboard/store" className="text-sm text-[#EAB308] hover:underline">
+        Back to Store dashboard
+      </Link>
     </div>
   )
 }

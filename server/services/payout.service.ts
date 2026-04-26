@@ -1,9 +1,18 @@
 import { prisma } from '@/server/db/client'
 import { stripe } from '@/server/stripe/client'
-import { getEnv } from '@/lib/env'
+import { logger } from '@/lib/logger'
 
-function getPayoutCurrency() {
-  return getEnv().PAYOUT_CURRENCY || 'GBP'
+function getSafePayoutErrorMessage(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return 'Payout transfer failed'
+  }
+
+  const maybeError = error as { type?: string; code?: string; message?: string }
+  if (maybeError.type || maybeError.code) {
+    return `Stripe error (${maybeError.type ?? 'unknown'}:${maybeError.code ?? 'unknown'})`
+  }
+
+  return 'Payout transfer failed'
 }
 
 export async function getAvailablePayoutBalance(userId: string) {
@@ -18,6 +27,7 @@ export async function getAvailablePayoutBalance(userId: string) {
 }
 
 export async function requestCreatorPayout(userId: string) {
+  const payoutCurrency = 'gbp'
   const account = await prisma.creatorPayoutAccount.findUniqueOrThrow({ where: { userId } })
 
   if (!account.payoutsEnabled) {
@@ -34,93 +44,105 @@ export async function requestCreatorPayout(userId: string) {
     data: {
       userId,
       amountCents,
-      currency: getPayoutCurrency(),
+      currency: payoutCurrency,
       status: 'PROCESSING',
     },
   })
 
+  let transferSent = false
+
   try {
     const transfer = await stripe.transfers.create({
       amount: amountCents,
-      currency: getPayoutCurrency(),
+      currency: payoutCurrency,
       destination: account.stripeAccountId,
       metadata: {
         payoutId: payout.id,
         userId,
       },
     })
+    transferSent = true
 
-    await prisma.revenueShare.updateMany({
-      where: {
-        recipientId: userId,
-        status: 'AVAILABLE',
-      },
-      data: {
-        status: 'PAID_OUT',
-        payoutId: payout.id,
-      },
-    })
+    try {
+      const [, paidPayout] = await prisma.$transaction([
+        prisma.revenueShare.updateMany({
+          where: {
+            recipientId: userId,
+            status: 'AVAILABLE',
+          },
+          data: {
+            status: 'PAID_OUT',
+          },
+        }),
+        prisma.payout.update({
+          where: { id: payout.id },
+          data: {
+            stripeTransferId: transfer.id,
+            status: 'PAID',
+          },
+        }),
+      ])
 
-    return prisma.payout.update({
-      where: { id: payout.id },
-      data: {
-        stripeTransferId: transfer.id,
-        status: 'PAID',
-      },
-    })
-  } catch (error) {
-    await prisma.payout.update({
-      where: { id: payout.id },
-      data: {
-        status: 'FAILED',
-        metadata: {
-          reason: error instanceof Error ? error.message : 'Unknown transfer failure',
+      logger.info({
+        event: 'payout.transfer',
+        message: 'Stripe transfer created',
+        metadata: { payoutId: payout.id, userId, amountCents },
+      })
+
+      return paidPayout
+    } catch (reconciliationError) {
+      await prisma.payout.update({
+        where: { id: payout.id },
+        data: {
+          stripeTransferId: transfer.id,
+          status: 'PROCESSING',
+          metadata: {
+            reconciliationRequired: true,
+            reason: 'Transfer sent but payout reconciliation is pending',
+          },
         },
-      },
-    })
+      })
+
+      throw reconciliationError
+    }
+  } catch (error) {
+    if (!transferSent) {
+      await prisma.payout.update({
+        where: { id: payout.id },
+        data: {
+          status: 'FAILED',
+          metadata: {
+            reason: getSafePayoutErrorMessage(error),
+          },
+        },
+      })
+    }
 
     throw error
   }
 }
 
-export async function getCreatorPayoutSummary(userId: string) {
-  const [available, pending, paid] = await Promise.all([
+export async function getPayoutSummary(userId: string) {
+  const [availableBalance, payoutAccount, payouts, revenueShares] = await Promise.all([
     getAvailablePayoutBalance(userId),
-    prisma.revenueShare.aggregate({
-      where: { recipientId: userId, status: 'PENDING' },
-      _sum: { amountCents: true },
-    }),
-    prisma.payout.aggregate({
-      where: { userId, status: 'PAID' },
-      _sum: { amountCents: true },
-    }),
+    prisma.creatorPayoutAccount.findUnique({ where: { userId } }),
+    prisma.payout.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 10 }),
+    prisma.revenueShare.findMany({ where: { recipientId: userId } }),
   ])
 
-  const topApps = await prisma.revenueShare.groupBy({
-    by: ['listingId'],
-    where: { recipientId: userId },
-    _sum: { amountCents: true },
-    orderBy: { _sum: { amountCents: 'desc' } },
-    take: 5,
-  })
+  const pendingRevenueShares = revenueShares
+    .filter((share) => share.status === 'PENDING')
+    .reduce((sum, share) => sum + share.amountCents, 0)
 
-  const referral = await prisma.revenueShare.aggregate({
-    where: {
-      recipientId: userId,
-      referralCode: { not: null },
-    },
-    _sum: { amountCents: true },
-  })
+  const paidOutTotal = payouts
+    .filter((payout) => payout.status === 'PAID')
+    .reduce((sum, payout) => sum + payout.amountCents, 0)
 
   return {
-    availableCents: available,
-    pendingCents: pending._sum.amountCents ?? 0,
-    paidOutCents: paid._sum.amountCents ?? 0,
-    referralRevenueCents: referral._sum.amountCents ?? 0,
-    currency: getPayoutCurrency(),
-    topAppsByRevenue: topApps.map((row) => ({
-      listingId: row.listingId,
-      revenueCents: row._sum.amountCents ?? 0,
-    })),
+    availableBalance,
+    pendingRevenueShares,
+    paidOutTotal,
+    payoutAccount,
+    payouts,
   }
 }

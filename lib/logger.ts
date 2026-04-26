@@ -1,75 +1,50 @@
 type LogLevel = 'info' | 'warn' | 'error'
 
-type LogPayload = Record<string, unknown> | undefined
+type LogPayload = {
+  event: string
+  message: string
+  metadata?: Record<string, unknown>
+}
 
-const SENSITIVE_FIELDS = new Set([
-  'token',
-  'authorization',
-  'secret',
-  'password',
-  'apiKey',
-  'key',
-])
+const SECRET_KEYS = ['token', 'secret', 'key', 'password', 'authorization']
 
-function sanitize(payload: LogPayload) {
-  if (!payload) return undefined
+function sanitizeMetadata(metadata: Record<string, unknown> = {}) {
   return Object.fromEntries(
-    Object.entries(payload).map(([key, value]) => {
-      if (SENSITIVE_FIELDS.has(key)) {
-        return [key, '[REDACTED]']
-      }
-      return [key, value]
+    Object.entries(metadata).map(([key, value]) => {
+      const isSecret = SECRET_KEYS.some((secretKey) =>
+        key.toLowerCase().includes(secretKey),
+      )
+
+      return [key, isSecret ? '[REDACTED]' : value]
     }),
   )
 }
 
-function log(level: LogLevel, message: string, payload?: LogPayload) {
-  const entry = {
+function log(level: LogLevel, payload: LogPayload) {
+  const body = {
     level,
-    message,
     timestamp: new Date().toISOString(),
-    ...sanitize(payload),
-  }
-  const method =
-    level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
-  method(JSON.stringify(entry))
-}
-
-export const logger = {
-  info: (message: string, payload?: LogPayload) => log('info', message, payload),
-  warn: (message: string, payload?: LogPayload) => log('warn', message, payload),
-  error: (message: string, payload?: LogPayload) => log('error', message, payload),
-type Meta = Record<string, unknown> | undefined
-
-function write(level: 'info' | 'warn' | 'error', message: string, meta?: Meta) {
-  const payload = {
-    level,
-    message,
-    timestamp: new Date().toISOString(),
-    ...(meta ? { meta } : {}),
+    event: payload.event,
+    message: payload.message,
+    metadata: sanitizeMetadata(payload.metadata),
   }
 
   if (level === 'error') {
-    console.error(payload)
+    console.error(JSON.stringify(body))
     return
   }
 
-  if (level === 'warn') {
-    console.warn(payload)
-    return
-  }
-
-  console.log(payload)
+  console.log(JSON.stringify(body))
 }
 
 export const logger = {
-  info(message: string, meta?: Meta) {
-    write('info', message, meta)
+  info(payload: LogPayload) {
+    log('info', payload)
   },
-  warn(message: string, meta?: Meta) {
-    write('warn', message, meta)
+  warn(payload: LogPayload) {
+    log('warn', payload)
   },
-  error(message: string, meta?: Meta) {
-    write('error', message, meta)
+  error(payload: LogPayload) {
+    log('error', payload)
   },
 }
