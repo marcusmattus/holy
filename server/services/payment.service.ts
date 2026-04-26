@@ -1,4 +1,5 @@
 import { prisma } from '@/server/db/client'
+import { getListingDisplayName } from '@/server/services/listing-utils'
 import { recordReward } from '@/server/services/reward-ledger.service'
 import { stripe } from '@/server/stripe/client'
 
@@ -54,7 +55,7 @@ export async function createStoreCheckoutSession(input: {
         sourceId: install.id,
         amount: 10,
         currency: 'POINTS',
-        description: `Free install reward from ${listing.title || listing.name}`,
+        description: `Free install reward from ${getListingDisplayName(listing)}`,
         metadata: {
           buyerId: buyer.id,
           listingId: listing.id,
@@ -100,7 +101,7 @@ export async function createStoreCheckoutSession(input: {
           currency: listing.currency,
           unit_amount: listing.priceCents,
           product_data: {
-            name: listing.title || listing.name,
+            name: getListingDisplayName(listing),
             description: listing.description,
           },
           recurring:

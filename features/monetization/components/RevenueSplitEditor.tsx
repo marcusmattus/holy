@@ -3,6 +3,9 @@
 import { useMemo, useState } from 'react'
 
 const PLATFORM_BPS = 1500
+const DEFAULT_CREATOR_BPS = 8500
+const DEFAULT_COLLABORATOR_BPS = 0
+const DEFAULT_REFERRER_BPS = 0
 
 type EditableRule = {
   recipientId: string
@@ -17,9 +20,9 @@ export function RevenueSplitEditor({
   listingId: string
   creatorId: string
 }) {
-  const [creatorBps, setCreatorBps] = useState(8000)
-  const [collaboratorBps, setCollaboratorBps] = useState(500)
-  const [referrerBps, setReferrerBps] = useState(500)
+  const [creatorBps, setCreatorBps] = useState(DEFAULT_CREATOR_BPS)
+  const [collaboratorBps, setCollaboratorBps] = useState(DEFAULT_COLLABORATOR_BPS)
+  const [referrerBps, setReferrerBps] = useState(DEFAULT_REFERRER_BPS)
 
   const totalBps = creatorBps + collaboratorBps + referrerBps + PLATFORM_BPS
   const exceeds = totalBps > 10000

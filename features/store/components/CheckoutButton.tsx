@@ -23,7 +23,10 @@ export function CheckoutButton({
     const data = await res.json()
 
     if (!res.ok) {
-      setError(data?.error ?? 'Unable to start checkout')
+      setError(
+        data?.error ??
+          'Unable to start checkout. Please try again or contact support if this continues.'
+      )
       return
     }
 

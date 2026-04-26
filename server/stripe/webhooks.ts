@@ -1,5 +1,6 @@
 import type Stripe from 'stripe'
 import { prisma } from '@/server/db/client'
+import { getListingDisplayName } from '@/server/services/listing-utils'
 import { recordReferralConversion } from '@/server/services/referral.service'
 import { allocateRevenueShares } from '@/server/services/revenue-share.service'
 import { recordReward } from '@/server/services/reward-ledger.service'
@@ -66,7 +67,7 @@ export async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Se
       sourceId: purchase.id,
       amount: purchase.amountCents,
       currency: 'GBP_CENTS',
-      description: `Revenue from ${purchase.listing.title || purchase.listing.name}`,
+      description: `Revenue from ${getListingDisplayName(purchase.listing)}`,
     })
   }
 

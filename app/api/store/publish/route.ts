@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { StoreListingPriceType } from '@prisma/client'
 import { prisma } from '@/server/db/client'
 import { recordReward } from '@/server/services/reward-ledger.service'
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
-  const slug = `${slugSeed || 'listing'}-${Math.random().toString(36).slice(2, 8)}`
+  const slug = `${slugSeed || 'listing'}-${randomUUID().slice(0, 8)}`
 
   const listing = await prisma.storeListing.create({
     data: {
