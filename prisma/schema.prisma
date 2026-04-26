@@ -8,21 +8,50 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                String           @id @default(cuid())
+  email             String           @unique
+  projects          Project[]
+  workspacesOwned   Workspace[]      @relation("WorkspaceOwner")
+  agentListings     AgentListing[]
+  agentInstalls     AgentInstall[]
+  agentReviews      AgentReview[]
+  workflows         Workflow[]
+  agentPurchases    AgentPurchase[]
+  complianceReviews ComplianceReview[]
+  apiKeys           ApiKey[]
+  createdAt         DateTime         @default(now())
+}
+
+model Workspace {
+  id                     String                  @id @default(cuid())
+  name                   String
+  ownerId                String
+  owner                  User                    @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  projects               Project[]
+  agents                 Agent[]
+  agentInstalls          AgentInstall[]
+  workflows              Workflow[]
+  identityProviderConfig IdentityProviderConfig?
+  apiUsageBuckets        ApiUsageBucket[]
+  analyticsDaily         WorkspaceAnalyticsDaily[]
+  slaMetrics             SlaMetric[]
+  apiKeys                ApiKey[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id          String           @id @default(cuid())
+  name        String
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  workspaceId String?
+  workspace   Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  versions    ProjectVersion[]
+  listings    StoreListing[]
+  deployments Deployment[]
+  experiments Experiment[]
+  createdAt   DateTime         @default(now())
 }
 
 model ProjectVersion {
@@ -34,14 +63,15 @@ model ProjectVersion {
 }
 
 model StoreListing {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project      @relation(fields: [projectId], references: [id])
   name        String
   description String
   price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isPublished Boolean      @default(false)
+  experiments Experiment[]
+  createdAt   DateTime     @default(now())
 }
 
 model Deployment {
@@ -51,4 +81,420 @@ model Deployment {
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model AgentListing {
+  id            String             @id @default(cuid())
+  creatorId     String
+  creator       User               @relation(fields: [creatorId], references: [id])
+  title         String
+  slug          String             @unique
+  description   String
+  category      AgentCategory
+  type          AgentType
+  configSchema  Json?
+  defaultConfig Json?
+  priceType     PriceType          @default(FREE)
+  priceCents    Int                @default(0)
+  status        AgentListingStatus @default(DRAFT)
+  installs      AgentInstall[]
+  agents        Agent[]
+  reviews       AgentReview[]
+  purchases     AgentPurchase[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model AgentInstall {
+  id             String             @id @default(cuid())
+  agentListingId String
+  agentListing   AgentListing       @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  workspaceId    String?
+  workspace      Workspace?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User               @relation(fields: [userId], references: [id])
+  config         Json?
+  status         AgentInstallStatus @default(ACTIVE)
+  agent          Agent?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model Agent {
+  id          String        @id @default(cuid())
+  title       String
+  listingId   String?
+  listing     AgentListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  installId   String?       @unique
+  install     AgentInstall? @relation(fields: [installId], references: [id], onDelete: SetNull)
+  userId      String
+  workspaceId String?
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  config      Json?
+  status      AgentStatus   @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model AgentReview {
+  id             String       @id @default(cuid())
+  agentListingId String
+  agentListing   AgentListing @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  rating         Int
+  body           String?
+  status         ReviewStatus @default(PUBLISHED)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([agentListingId, userId])
+}
+
+model Workflow {
+  id          String             @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerId     String
+  owner       User               @relation(fields: [ownerId], references: [id])
+  name        String
+  description String?
+  status      WorkflowStatus     @default(ACTIVE)
+  definition  Json
+  schedules   WorkflowSchedule[]
+  runs        WorkflowRun[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model WorkflowSchedule {
+  id         String   @id @default(cuid())
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  cron       String
+  enabled    Boolean  @default(true)
+  lastRunAt  DateTime?
+  nextRunAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model WorkflowRun {
+  id          String            @id @default(cuid())
+  workflowId  String
+  workflow    Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status      WorkflowRunStatus @default(PENDING)
+  input       Json?
+  output      Json?
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  steps       WorkflowStepRun[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model WorkflowStepRun {
+  id               String            @id @default(cuid())
+  workflowRunId    String
+  workflowRun      WorkflowRun       @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  stepKey          String
+  type             WorkflowStepType
+  status           WorkflowRunStatus @default(PENDING)
+  input            Json?
+  output           Json?
+  requiresApproval Boolean           @default(false)
+  approvedAt       DateTime?
+  error            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model IdentityProviderConfig {
+  id          String                 @id @default(cuid())
+  workspaceId String                 @unique
+  workspace   Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider    IdentityProviderType
+  status      IdentityProviderStatus @default(DISABLED)
+  domains     String[]
+  config      Json?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+}
+
+model ApiKey {
+  id           String          @id @default(cuid())
+  hashedKey    String          @unique
+  scopes       String[]
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId  String?
+  workspace    Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  usageBuckets ApiUsageBucket[]
+}
+
+model ApiUsageBucket {
+  id          String     @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String?
+  apiKeyId    String?
+  apiKey      ApiKey?    @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  windowStart DateTime
+  windowEnd   DateTime
+  count       Int        @default(0)
+  limit       Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([workspaceId, windowStart])
+  @@index([apiKeyId, windowStart])
+}
+
+model WhiteLabelSite {
+  id            String                  @id @default(cuid())
+  name          String
+  billingConfig WhiteLabelBillingConfig?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+}
+
+model WhiteLabelBillingConfig {
+  id               String                @id @default(cuid())
+  whiteLabelSiteId String                @unique
+  whiteLabelSite   WhiteLabelSite        @relation(fields: [whiteLabelSiteId], references: [id], onDelete: Cascade)
+  platformFeeBps   Int                   @default(1500)
+  creatorFeeBps    Int                   @default(8500)
+  stripeAccountId  String?
+  billingMode      WhiteLabelBillingMode @default(HOLY_MANAGED)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+}
+
+model ComplianceReview {
+  id           String                 @id @default(cuid())
+  targetType   ComplianceTargetType
+  targetId     String
+  status       ComplianceReviewStatus @default(PENDING)
+  riskLevel    ComplianceRiskLevel    @default(MEDIUM)
+  checks       Json?
+  notes        String?
+  reviewedById String?
+  reviewedBy   User?                  @relation(fields: [reviewedById], references: [id])
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@index([targetType, targetId])
+}
+
+model WorkspaceAnalyticsDaily {
+  id            String    @id @default(cuid())
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  date          DateTime
+  aiGenerations Int       @default(0)
+  aiPatches     Int       @default(0)
+  deployments   Int       @default(0)
+  storeViews    Int       @default(0)
+  installs      Int       @default(0)
+  purchases     Int       @default(0)
+  revenueCents  Int       @default(0)
+  apiRequests   Int       @default(0)
+  activeUsers   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([workspaceId, date])
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  workspaceId String?
+  event       String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId, event])
+}
+
+model Experiment {
+  id         String           @id @default(cuid())
+  projectId  String?
+  project    Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listingId  String?
+  listing    StoreListing?    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  name       String
+  hypothesis String
+  status     ExperimentStatus @default(DRAFT)
+  variants   Json
+  metrics    Json?
+  winner     String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model AgentPurchase {
+  id                  String         @id @default(cuid())
+  agentListingId      String
+  agentListing        AgentListing   @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  buyerId             String
+  buyer               User           @relation(fields: [buyerId], references: [id])
+  amountCents         Int
+  currency            String         @default("gbp")
+  status              PurchaseStatus @default(PENDING)
+  stripeSessionId     String?        @unique
+  stripePaymentIntent String?        @unique
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model SlaMetric {
+  id          String     @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  metric      String
+  value       Float
+  unit        String
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+}
+
+model SettlementAudit {
+  id        String   @id @default(cuid())
+  action    String
+  actorId   String?
+  payload   Json?
+  createdAt DateTime @default(now())
+}
+
+enum AgentCategory {
+  GROWTH
+  SEO
+  QA
+  DEPLOYMENT
+  PRICING
+  ANALYTICS
+  COMPLIANCE
+  CUSTOM
+}
+
+enum AgentType {
+  ASSISTANT
+  AUTOMATION
+}
+
+enum AgentStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum AgentListingStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  ARCHIVED
+  SUSPENDED
+}
+
+enum AgentInstallStatus {
+  ACTIVE
+  PAUSED
+  REMOVED
+}
+
+enum PriceType {
+  FREE
+  ONE_TIME
+  SUBSCRIPTION
+  USAGE
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+}
+
+enum WorkflowStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum WorkflowRunStatus {
+  PENDING
+  RUNNING
+  WAITING_APPROVAL
+  APPROVED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum WorkflowStepType {
+  RUN_AGENT
+  APPLY_PATCH
+  RUN_QA
+  DEPLOY_PREVIEW
+  DEPLOY_PRODUCTION
+  UPDATE_LISTING
+  SEND_NOTIFICATION
+}
+
+enum IdentityProviderType {
+  SAML
+  OIDC
+  GOOGLE_WORKSPACE
+  MICROSOFT_ENTRA
+}
+
+enum IdentityProviderStatus {
+  DISABLED
+  CONFIGURING
+  ACTIVE
+  ERROR
+}
+
+enum WhiteLabelBillingMode {
+  HOLY_MANAGED
+  WORKSPACE_CONNECT
+}
+
+enum ComplianceTargetType {
+  STORE_LISTING
+  TEMPLATE
+  AGENT_LISTING
+  WHITE_LABEL_SITE
+  SETTLEMENT_PROVIDER
+}
+
+enum ComplianceReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_CHANGES
+}
+
+enum ComplianceRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  COMPLETED
+  CANCELLED
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }

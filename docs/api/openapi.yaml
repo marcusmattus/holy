@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: Holy API
+  version: 0.12.0
+paths:
+  /api/agents/marketplace:
+    get:
+      summary: List published agent marketplace listings
+    post:
+      summary: Publish an agent listing
+  /api/agents/marketplace/{slug}:
+    get:
+      summary: Get an agent listing by slug
+  /api/agents/marketplace/{agentListingId}/install:
+    post:
+      summary: Install an agent listing into a user/workspace
+  /api/agents/marketplace/{agentListingId}/checkout:
+    post:
+      summary: Start paid agent checkout
+  /api/workflows:
+    post:
+      summary: Create workflow definition
+  /api/workflows/{workflowId}/run:
+    post:
+      summary: Run workflow with rate-limited API key checks
+  /api/workflows/runs/{runId}/approve-step:
+    post:
+      summary: Approve a workflow step that is waiting for approval
+  /api/workspaces/{workspaceId}/identity-provider:
+    get:
+      summary: Read workspace identity provider config
+    put:
+      summary: Upsert workspace identity provider config
+  /api/workspaces/{workspaceId}/analytics:
+    get:
+      summary: Workspace analytics warehouse query
+  /api/cron/workspace-analytics:
+    post:
+      summary: Rebuild daily analytics aggregates
+      security:
+        - cronSecret: []
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+    cronSecret:
+      type: apiKey
+      in: header
+      name: x-cron-secret
+x-rate-limits:
+  FREE_API: 1000/month
+  PRO_API: 25000/month
+  TEAM_API: 100000/month
+  ENTERPRISE_API: custom
+x-webhook-signatures:
+  description: Verify webhook signatures before processing events.
+x-idempotency-keys:
+  description: Send idempotency-key headers for safe retry semantics.
