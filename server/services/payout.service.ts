@@ -27,6 +27,7 @@ export async function getAvailablePayoutBalance(userId: string) {
 }
 
 export async function requestCreatorPayout(userId: string) {
+  const payoutCurrency = 'gbp'
   const account = await prisma.creatorPayoutAccount.findUniqueOrThrow({ where: { userId } })
 
   if (!account.payoutsEnabled) {
@@ -43,7 +44,7 @@ export async function requestCreatorPayout(userId: string) {
     data: {
       userId,
       amountCents,
-      currency: 'gbp',
+      currency: payoutCurrency,
       status: 'PROCESSING',
     },
   })
@@ -53,7 +54,7 @@ export async function requestCreatorPayout(userId: string) {
   try {
     const transfer = await stripe.transfers.create({
       amount: amountCents,
-      currency: 'gbp',
+      currency: payoutCurrency,
       destination: account.stripeAccountId,
       metadata: {
         payoutId: payout.id,
