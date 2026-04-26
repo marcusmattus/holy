@@ -1,6 +1,8 @@
 import { EarningsSummary } from '@/components/revenue/earnings-summary'
 import { FinancialModel } from '@/components/revenue/financial-model'
 import { WalletConnect } from '@/components/revenue/wallet-connect'
+import { PricingSetupPanel } from '@/features/monetization/components/PricingSetupPanel'
+import { RevenueSplitEditor } from '@/features/monetization/components/RevenueSplitEditor'
 import Link from 'next/link'
 
 export const metadata = { title: 'Revenue — Holy' }
@@ -26,6 +28,10 @@ export default function RevenuePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FinancialModel />
         <WalletConnect />
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <PricingSetupPanel listingId="demo-listing" />
+        <RevenueSplitEditor listingId="demo-listing" creatorId="demo-user" />
       </div>
     </div>
   )
