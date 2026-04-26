@@ -28,7 +28,16 @@ export function useGeneration(initialCode: string) {
       })
 
       if (!res.ok) {
-        throw new Error('Failed to generate code. Please try again.')
+        let detail = `Request failed (${res.status})`
+        try {
+          const errorData = (await res.json()) as { error?: string }
+          if (errorData.error) {
+            detail = `${detail}: ${errorData.error}`
+          }
+        } catch {
+          // Keep generic status detail when no JSON error payload is returned.
+        }
+        throw new Error(detail)
       }
 
       const data: GenerateResponse = await res.json()

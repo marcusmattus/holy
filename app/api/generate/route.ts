@@ -31,7 +31,11 @@ if (root) {
 
 export async function POST(req: Request) {
   const body = (await req.json()) as { prompt?: unknown }
-  const prompt = typeof body.prompt === 'string' ? body.prompt : ''
+  const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : ''
+
+  if (!prompt) {
+    return Response.json({ error: 'Prompt is required.' }, { status: 400 })
+  }
 
   const { text } = await generateText({
     model: getDefaultModel(),
