@@ -50,8 +50,19 @@ export function executeTenantMigration(runId: string) {
   if (!run) throw new Error('Migration run not found')
   if (run.status !== 'APPROVED') throw new Error('Run must be approved before execution')
   run.status = 'RUNNING'
-  run.status = 'COMPLETED'
-  run.executedAt = new Date().toISOString()
   audit('tenant-migration.run.executed', { runId })
+  return run
+}
+
+export function finalizeTenantMigration(runId: string, success: boolean, error?: string) {
+  const run = phase18State.migrationRuns.find((item) => item.id === runId)
+  if (!run) throw new Error('Migration run not found')
+  if (success && run.status !== 'RUNNING') {
+    throw new Error('Run must be running before successful finalization')
+  }
+  run.status = success ? 'COMPLETED' : 'FAILED'
+  run.executedAt = new Date().toISOString()
+  run.error = success ? undefined : error ?? 'Unknown migration execution failure'
+  audit('tenant-migration.run.finalized', { runId, success })
   return run
 }

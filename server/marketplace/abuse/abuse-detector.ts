@@ -1,6 +1,8 @@
 import { detectMarketplaceSignals } from '@/server/marketplace/abuse/signals'
 import { computeMarketplaceRiskScore } from '@/server/marketplace/abuse/risk-scoring'
 
+const ENFORCEMENT_THRESHOLD = 0.7
+
 export function analyzeMarketplaceTarget(input: {
   installVelocity: number
   reviewPatternScore: number
@@ -15,6 +17,6 @@ export function analyzeMarketplaceTarget(input: {
   return {
     signals,
     riskScore,
-    proposesEnforcement: riskScore >= 0.7,
+    proposesEnforcement: riskScore >= ENFORCEMENT_THRESHOLD,
   }
 }

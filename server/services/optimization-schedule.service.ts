@@ -40,7 +40,9 @@ export function createOptimizationSchedule(input: {
 
 export function runDueOptimizationSchedules() {
   const now = new Date().toISOString()
-  const due = phase18State.optimizationSchedules.filter((item) => item.enabled && Boolean(item.nextRunAt) && item.nextRunAt! <= now)
+  const due = phase18State.optimizationSchedules.filter(
+    (item) => item.enabled && item.nextRunAt !== undefined && item.nextRunAt <= now,
+  )
   return due.map((schedule) => {
     const run = runScheduledCampaign(schedule.campaignId, schedule.id)
     schedule.lastRunAt = now
