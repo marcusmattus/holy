@@ -8,24 +8,20 @@ import { DeploymentSettings } from '@/components/platform/DeploymentSettings'
 import { ErrorSuppression } from './error-suppression'
 
 export default function PlatformPage() {
-  const [currentView, setCurrentView] = useState<
-    'hub' | 'workspace' | 'insights' | 'deploy'
-  >('hub')
+  const [currentView, setCurrentView] = useState<'hub' | 'workspace' | 'insights' | 'deploy'>('hub')
   const [selectedProject, setSelectedProject] = useState<any>(null)
 
   return (
     <>
       <ErrorSuppression />
       <div className="min-h-screen bg-[#0a0a0a] text-white">
-        {/* Ethereal Background */}
         <div className="fixed inset-0 -z-10">
           <div className="ethereal-bg" />
           <div className="grain" />
         </div>
 
-        {/* Main Content */}
         {currentView === 'hub' && (
-          <ProjectHub
+          <ProjectHub 
             onSelectProject={(project) => {
               setSelectedProject(project)
               setCurrentView('workspace')
@@ -33,25 +29,25 @@ export default function PlatformPage() {
             onNewProject={() => setCurrentView('workspace')}
           />
         )}
-
+        
         {currentView === 'workspace' && (
-          <AIWorkspace
+          <AIWorkspace 
             project={selectedProject}
             onBack={() => setCurrentView('hub')}
             onDeploy={() => setCurrentView('deploy')}
             onViewInsights={() => setCurrentView('insights')}
           />
         )}
-
+        
         {currentView === 'insights' && (
-          <ProjectInsights
+          <ProjectInsights 
             project={selectedProject}
             onBack={() => setCurrentView('workspace')}
           />
         )}
-
+        
         {currentView === 'deploy' && (
-          <DeploymentSettings
+          <DeploymentSettings 
             project={selectedProject}
             onBack={() => setCurrentView('workspace')}
             onSuccess={() => setCurrentView('hub')}

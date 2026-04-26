@@ -55,13 +55,9 @@ body {
   box-shadow: 0 0 20px rgba(201, 162, 74, 0.3);
 }
 
-@keyframes subtle-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.float-anim {
-  animation: subtle-float 6s ease-in-out infinite;
+@keyframes shimmer-effect {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
 }
 
 .shimmer {
@@ -81,26 +77,6 @@ body {
   animation: shimmer-effect 4s infinite linear;
 }
 
-@keyframes shimmer-effect {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
-}
-
-.status-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 8px var(--gold);
-  animation: pulse-gold 2s infinite;
-}
-
-@keyframes pulse-gold {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
 .ai-shimmer {
   background: linear-gradient(90deg, transparent, rgba(201, 162, 74, 0.1), transparent);
   background-size: 200% 100%;
@@ -110,26 +86,4 @@ body {
 @keyframes ai-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
-}
-
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gold);
-}
-
-@keyframes progress {
-  from { width: 0%; }
-  to { width: 100%; }
 }
