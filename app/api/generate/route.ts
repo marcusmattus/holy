@@ -18,27 +18,35 @@ export async function POST(req: Request) {
 
   const { text } = await generateText({
     model: getDefaultModel(),
-    prompt: `Return a JSON object of files for a React TypeScript app.
-Format exactly like this (no markdown fences, just raw JSON):
-{
-  "/App.tsx": "code here",
-  "/components/Button.tsx": "code here"
-}
+    prompt: `Return only JavaScript ES module code (no markdown fences) that runs in a browser and renders into an existing <div id="root"></div> using plain DOM APIs.
+Do not import anything.
+Make the output visible and styled with inline styles.
 
 Idea: ${prompt}`,
   })
 
-  let files: Record<string, string>
-  try {
-    // Strip markdown code fences if the model included them
-    const cleaned = text.replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim()
-    files = JSON.parse(cleaned)
-  } catch (err) {
-    console.error('Failed to parse AI-generated files JSON:', err)
-    files = {
-      '/App.tsx': `export default function App() {\n  return <div>${prompt}</div>\n}`,
-    }
+  // Strip markdown code fences if the model included them
+  const code = text.replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim()
+  const hasCode = code.length > 0
+
+  if (hasCode) {
+    return Response.json({ code })
   }
 
-  return Response.json({ files })
+  const promptText = typeof prompt === 'string' ? prompt : ''
+  const fallbackCode = `
+const root = document.getElementById('root')
+if (root) {
+  const card = document.createElement('div')
+  card.style.cssText = 'padding:24px;font-family:Inter,Arial,sans-serif'
+  const title = document.createElement('h1')
+  title.textContent = 'Holy Studio'
+  const body = document.createElement('p')
+  body.textContent = ${JSON.stringify(promptText || 'Start building...')}
+  card.append(title, body)
+  root.append(card)
+}
+`.trim()
+
+  return Response.json({ code: fallbackCode })
 }
