@@ -601,3 +601,288 @@ enum AnalyticsEventName {
   PURCHASE_COMPLETED
   DEPLOYMENT_CREATED
 }
+
+model Workspace {
+  id                        String                 @id @default(cuid())
+  userId                    String
+  user                      User                   @relation(fields: [userId], references: [id])
+  name                      String
+  strictMode                Boolean                @default(false)
+  allowAggregatedLearning   Boolean                @default(true)
+  allowAnonymizedBenchmarking Boolean              @default(true)
+  disablePersonalizedRecommendations Boolean       @default(false)
+  optimizationCampaigns     OptimizationCampaign[]
+  intelligencePolicies      WorkspaceIntelligencePolicy[]
+  federatedModelUpdates     FederatedModelUpdate[]
+  tenantMigrationRuns       TenantMigrationRun[]
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+}
+
+model RegionControlPlane {
+  id                String       @id @default(cuid())
+  region            DataRegion
+  name              String
+  status            RegionStatus @default(ACTIVE)
+  priority          Int          @default(100)
+  metadata          Json?
+  lastHealthCheckAt DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model RegionFailoverEvent {
+  id           String         @id @default(cuid())
+  fromRegion   DataRegion
+  toRegion     DataRegion
+  reason       String
+  status       FailoverStatus @default(PROPOSED)
+  approvedById String?
+  approvedBy   User?          @relation("RegionFailoverApprover", fields: [approvedById], references: [id])
+  executedAt   DateTime?
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model FederatedLearningRound {
+  id          String                @id @default(cuid())
+  name        String
+  status      FederatedRoundStatus  @default(DRAFT)
+  target      FederatedLearningTarget
+  config      Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+  updates     FederatedModelUpdate[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model FederatedModelUpdate {
+  id                String                 @id @default(cuid())
+  roundId           String
+  round             FederatedLearningRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  workspaceId       String?
+  workspace         Workspace?             @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  signalHash        String
+  updateJson        Json
+  sampleSize        Int
+  privacyBudgetUsed Float                  @default(0)
+  accepted          Boolean                @default(false)
+  createdAt         DateTime               @default(now())
+}
+
+model OptimizationCampaign {
+  id          String                 @id @default(cuid())
+  workspaceId String
+  workspace   Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  schedules   OptimizationSchedule[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+}
+
+model OptimizationSchedule {
+  id         String               @id @default(cuid())
+  campaignId String
+  campaign   OptimizationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  cron       String
+  enabled    Boolean              @default(true)
+  lastRunAt  DateTime?
+  nextRunAt  DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+}
+
+model MarketplaceAbuseSignal {
+  id         String                     @id @default(cuid())
+  targetType MarketplaceAbuseTargetType
+  targetId   String
+  signalType MarketplaceAbuseSignalType
+  score      Float
+  metadata   Json?
+  createdAt  DateTime                   @default(now())
+}
+
+model MarketplaceEnforcementAction {
+  id           String                       @id @default(cuid())
+  targetType   MarketplaceAbuseTargetType
+  targetId     String
+  action       MarketplaceEnforcementType
+  status       MarketplaceEnforcementStatus @default(PROPOSED)
+  reason       String
+  approvedById String?
+  approvedBy   User?                        @relation("MarketplaceEnforcementApprover", fields: [approvedById], references: [id])
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+}
+
+model TenantMigrationRun {
+  id           String                @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromRegion   DataRegion
+  toRegion     DataRegion
+  status       TenantMigrationStatus @default(DRAFT)
+  plan         Json
+  dryRunResult Json?
+  executedAt   DateTime?
+  approvedById String?
+  approvedBy   User?                 @relation("TenantMigrationApprover", fields: [approvedById], references: [id])
+  rollbackPlan Json?
+  error        String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model StatusComponent {
+  id          String                @id @default(cuid())
+  name        String
+  slug        String                @unique
+  description String?
+  status      PublicComponentStatus @default(OPERATIONAL)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model PublicIncident {
+  id         String               @id @default(cuid())
+  title      String
+  impact     PublicIncidentImpact
+  status     PublicIncidentStatus @default(INVESTIGATING)
+  summary    String
+  visible    Boolean              @default(false)
+  startedAt  DateTime             @default(now())
+  resolvedAt DateTime?
+  updates    PublicIncidentUpdate[]
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+}
+
+model PublicIncidentUpdate {
+  id         String         @id @default(cuid())
+  incidentId String
+  incident   PublicIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  message    String
+  createdAt  DateTime       @default(now())
+}
+
+model WorkspaceIntelligencePolicy {
+  id                               String    @id @default(cuid())
+  workspaceId                      String
+  workspace                        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  allowAggregatedLearning          Boolean   @default(true)
+  optedOutOfGlobalIntelligence     Boolean   @default(false)
+  allowAnonymizedBenchmarking      Boolean   @default(true)
+  disablePersonalizedRecommendations Boolean @default(false)
+  strictModeDefaultsConservative   Boolean   @default(true)
+  createdAt                        DateTime  @default(now())
+  updatedAt                        DateTime  @updatedAt
+}
+
+enum DataRegion {
+  US_EAST
+  US_WEST
+  EU_CENTRAL
+  AP_SOUTHEAST
+}
+
+enum RegionStatus {
+  ACTIVE
+  DEGRADED
+  FAILING_OVER
+  DISABLED
+}
+
+enum FailoverStatus {
+  PROPOSED
+  APPROVED
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+enum FederatedRoundStatus {
+  DRAFT
+  RUNNING
+  AGGREGATING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum FederatedLearningTarget {
+  MARKETPLACE_RANKING
+  SEARCH_RELEVANCE
+  OPTIMIZATION_RECOMMENDATIONS
+  ABUSE_DETECTION
+  AGENT_QUALITY
+}
+
+enum MarketplaceAbuseTargetType {
+  STORE_LISTING
+  TEMPLATE
+  AGENT_LISTING
+  WORKFLOW_TEMPLATE
+  PLUGIN
+  REVIEW
+  CREATOR_PROFILE
+}
+
+enum MarketplaceAbuseSignalType {
+  SUSPICIOUS_VELOCITY
+  REVIEW_PATTERN
+  DUPLICATE_CONTENT
+  REPORT_SPIKE
+  REFUND_SPIKE
+  REFERRAL_ABUSE
+  RANKING_MANIPULATION
+}
+
+enum MarketplaceEnforcementType {
+  DEMOTE
+  HIDE
+  SUSPEND
+  REQUIRE_REVIEW
+  REMOVE_REVIEW
+}
+
+enum MarketplaceEnforcementStatus {
+  PROPOSED
+  APPROVED
+  APPLIED
+  DISMISSED
+}
+
+enum TenantMigrationStatus {
+  DRAFT
+  DRY_RUN_COMPLETE
+  APPROVED
+  RUNNING
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+  CANCELLED
+}
+
+enum PublicComponentStatus {
+  OPERATIONAL
+  DEGRADED
+  PARTIAL_OUTAGE
+  MAJOR_OUTAGE
+  MAINTENANCE
+}
+
+enum PublicIncidentImpact {
+  NONE
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum PublicIncidentStatus {
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+}

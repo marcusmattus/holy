@@ -1,7 +1,7 @@
 "use client"
 
 function escapeClosingTags(value: string) {
-  return value.replace(/<\/script/gi, "<\\/script")
+  return value.replaceAll('</script', '<\\/script')
 }
 
 export default function SandboxPreview({ code }: { code: string }) {
