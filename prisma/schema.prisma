@@ -15,12 +15,14 @@ model User {
 }
 
 model Project {
-  id        String   @id @default(cuid())
-  name      String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  versions  ProjectVersion[]
-  createdAt DateTime @default(now())
+  id           String           @id @default(cuid())
+  name         String
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  versions     ProjectVersion[]
+  listings     StoreListing[]
+  deployments  Deployment[]
+  createdAt    DateTime         @default(now())
 }
 
 model ProjectVersion {
@@ -28,5 +30,25 @@ model ProjectVersion {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id])
   code      String
+  createdAt DateTime @default(now())
+}
+
+model StoreListing {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  name        String
+  description String
+  price       Float?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Deployment {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  url       String
+  status    String
   createdAt DateTime @default(now())
 }
