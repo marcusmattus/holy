@@ -11,7 +11,30 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   projects  Project[]
+  workspaces Workspace[]
   createdAt DateTime @default(now())
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  ownerId   String?
+  owner     User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  runtimeExecutions    AgentRuntimeExecution[]
+  dataResidencyPolicy  WorkspaceDataResidencyPolicy?
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  runtimeExecutions AgentRuntimeExecution[]
 }
 
 model Project {
@@ -51,4 +74,153 @@ model Deployment {
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model AgentRuntimeExecution {
+  id          String                 @id @default(cuid())
+  agentId     String?
+  agent       Agent?                 @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  workspaceId String?
+  workspace   Workspace?             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  status      RuntimeExecutionStatus @default(PENDING)
+  input       Json?
+  output      Json?
+  logs        Json?
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+}
+
+enum RuntimeExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMED_OUT
+  CANCELLED
+}
+
+model WorkflowRunLease {
+  id            String   @id @default(cuid())
+  workflowRunId String   @unique
+  workerId      String
+  leaseUntil    DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model IdempotencyKey {
+  id        String            @id @default(cuid())
+  key       String            @unique
+  scope     String
+  response  Json?
+  status    IdempotencyStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+enum IdempotencyStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model WorkspaceDataResidencyPolicy {
+  id          String     @id @default(cuid())
+  workspaceId String     @unique
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  region      DataRegion @default(GLOBAL)
+  strictMode  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum DataRegion {
+  GLOBAL
+  EU
+  US
+  UK
+}
+
+model AgentListing {
+  id          String               @id @default(cuid())
+  name        String
+  isPublished Boolean              @default(false)
+  certifications AgentCertification[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model AgentCertification {
+  id             String              @id @default(cuid())
+  agentListingId String
+  agentListing   AgentListing        @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  status         CertificationStatus @default(PENDING)
+  level          CertificationLevel?
+  checks         Json?
+  reviewedById   String?
+  issuedAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+enum CertificationStatus {
+  PENDING
+  CERTIFIED
+  REJECTED
+  REVOKED
+  EXPIRED
+}
+
+enum CertificationLevel {
+  VERIFIED
+  TRUSTED
+  ENTERPRISE_READY
+}
+
+model SettlementProviderApproval {
+  id            String                 @id @default(cuid())
+  provider      String
+  chain         String?
+  currency      String
+  status        ComplianceReviewStatus @default(PENDING)
+  maxBatchAmount Int?
+  approvedById  String?
+  notes         String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+}
+
+model SettlementBatch {
+  id           String                @id @default(cuid())
+  provider     String
+  currency     String
+  status       SettlementBatchStatus @default(DRAFT)
+  totalAmount  Int
+  items        Json
+  preview      Json?
+  txHash       String?
+  approvedById String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+enum SettlementBatchStatus {
+  DRAFT
+  PREVIEWED
+  APPROVED
+  SUBMITTED
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+enum ComplianceReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

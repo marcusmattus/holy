@@ -1,3 +1,5 @@
+import { DataExportGovernancePanel } from '@/features/enterprise/components/DataExportGovernancePanel'
+
 export const metadata = { title: 'Settings — Holy' }
 
 export default function SettingsPage() {
@@ -24,6 +26,13 @@ export default function SettingsPage() {
               { label: 'HolyOS API Key', value: 'holy_sk_••••••••••••••••' },
             ],
           },
+          {
+            section: 'Enterprise Data Residency',
+            fields: [
+              { label: 'Region', value: 'EU' },
+              { label: 'Strict mode', value: 'Enabled' },
+            ],
+          },
         ].map(({ section, fields }) => (
           <div key={section} className="p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -43,6 +52,7 @@ export default function SettingsPage() {
           </div>
         ))}
       </div>
+      <DataExportGovernancePanel />
     </div>
   )
 }
