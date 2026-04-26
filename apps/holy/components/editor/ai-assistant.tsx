@@ -15,27 +15,29 @@ export function AIAssistant({ projectId }: { projectId: string }) {
     {
       id: '1',
       role: 'assistant',
-      content: '✦ Holy AI ready. Describe what you want to build and I will generate the code for you.',
+      content:
+        '✦ Holy AI ready. Describe what you want to build and I will generate the code for you.',
     },
   ])
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
-  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setInput(e.target.value)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
-    
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: input,
     }
-    
-    setMessages(prev => [...prev, userMessage])
+
+    setMessages((prev) => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
-    
+
     // Simulate AI response
     setTimeout(() => {
       const aiMessage: Message = {
@@ -43,7 +45,7 @@ export function AIAssistant({ projectId }: { projectId: string }) {
         role: 'assistant',
         content: 'Processing your request...',
       }
-      setMessages(prev => [...prev, aiMessage])
+      setMessages((prev) => [...prev, aiMessage])
       setIsLoading(false)
     }, 1000)
   }
@@ -60,8 +62,14 @@ export function AIAssistant({ projectId }: { projectId: string }) {
         {isLoading && (
           <div className="flex space-x-1 ml-auto">
             <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" />
-            <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" style={{ animationDelay: '0.2s' }} />
-            <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" style={{ animationDelay: '0.4s' }} />
+            <div
+              className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse"
+              style={{ animationDelay: '0.2s' }}
+            />
+            <div
+              className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse"
+              style={{ animationDelay: '0.4s' }}
+            />
           </div>
         )}
       </div>

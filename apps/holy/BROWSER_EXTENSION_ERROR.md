@@ -3,6 +3,7 @@
 ## Issue Explanation
 
 The error you're seeing:
+
 ```
 TypeError: Cannot redefine property: BitcoinProvider
 ```
@@ -25,12 +26,15 @@ This error comes from a **browser extension** (likely a Bitcoin/crypto wallet li
 We've added three layers of protection:
 
 ### 1. Error Boundary Component
+
 Catches and handles any React errors gracefully.
 
 ### 2. Error Suppression
+
 Filters out browser extension console noise.
 
 ### 3. Production Build
+
 Works perfectly regardless of local extensions.
 
 ## If You Want to Completely Remove the Error
@@ -52,6 +56,7 @@ Works perfectly regardless of local extensions.
 ### Option 3: Different Browser Profile
 
 Create a clean Chrome profile just for development:
+
 1. Chrome → Settings → Users → Add
 2. Create new profile without extensions
 3. Use for development
@@ -66,6 +71,7 @@ Create a clean Chrome profile just for development:
 ## For Production Deployment
 
 This error will **NOT appear** in production because:
+
 - It's specific to your local browser extensions
 - Different users have different extensions
 - The error boundary handles any edge cases

@@ -38,17 +38,20 @@ Based on your design files, I've created a complete, working platform with:
 ## 🎨 Design System
 
 ### Color Palette
+
 - **Gold Accent**: `#C9A24A` - Premium, sophisticated touch
 - **Background**: `#0a0a0a` - Deep black base
 - **Glass Panels**: `rgba(255, 255, 255, 0.03)` - Subtle transparency
 - **Borders**: `rgba(255, 255, 255, 0.08)` - Delicate separation
 
 ### Typography
+
 - **Font**: Space Grotesk (300, 400, 500, 600, 700)
 - **Style**: Technical sophistication with modern aesthetics
 - **Loading**: Imported from Google Fonts
 
 ### Visual Effects
+
 - **Ethereal Background**: Radial gradients with 80px blur
 - **Grain Texture**: SVG noise overlay (0.02 opacity)
 - **Glassmorphism**: Backdrop blur with subtle borders
@@ -59,6 +62,7 @@ Based on your design files, I've created a complete, working platform with:
 ## 🚀 Features
 
 ### Navigation Flow
+
 ```
 Project Hub → AI Workspace → Project Insights
                     ↓
@@ -66,6 +70,7 @@ Project Hub → AI Workspace → Project Insights
 ```
 
 ### Interactive Elements
+
 - **Hover States**: Scale transforms, glow effects
 - **Click Feedback**: Active states with gold highlights
 - **Loading States**: Shimmer effects, skeleton screens
@@ -73,6 +78,7 @@ Project Hub → AI Workspace → Project Insights
 - **Responsive**: Mobile-first, touch-optimized
 
 ### AI Chat Interface
+
 - Conversation history display
 - User/AI message differentiation
 - Streaming response animations
@@ -80,6 +86,7 @@ Project Hub → AI Workspace → Project Insights
 - Keyboard shortcuts (Enter to send)
 
 ### Live Preview Canvas
+
 - Desktop view (full-width responsive)
 - Mobile view (375x667px frame with device chrome)
 - Code view (syntax-highlighted React code)
@@ -107,22 +114,26 @@ apps/holy/
 ## 🎯 Usage
 
 ### Access the Platform
+
 1. Start the dev server: `npm run dev`
 2. Navigate to: `http://localhost:3000/platform`
 
 ### Create a New Project
+
 1. Click "+ New App" in navigation
 2. Enter your project description
 3. Click "Generate ✨"
 4. Watch AI build your application
 
 ### Work with AI
+
 1. Use chat interface to refine design
 2. Switch between Desktop/Mobile/Code views
 3. See changes in real-time
 4. Click "Deploy App" when ready
 
 ### Deploy Your Application
+
 1. Configure custom domain
 2. Select environment (Staging/Production)
 3. Toggle auto-deployment
@@ -133,7 +144,9 @@ apps/holy/
 ## 🎨 Customization
 
 ### Change Colors
+
 Edit `platform.css`:
+
 ```css
 :root {
   --gold: #YOUR_COLOR;
@@ -142,13 +155,17 @@ Edit `platform.css`:
 ```
 
 ### Modify Animations
+
 Adjust timing in components:
+
 ```css
 transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 ```
 
 ### Add New Views
+
 Create components in `components/platform/`:
+
 ```typescript
 export function YourComponent({ ...props }) {
   // Your code
@@ -158,6 +175,7 @@ export function YourComponent({ ...props }) {
 ## 🔧 Technical Details
 
 ### Stack
+
 - **Framework**: Next.js 14+ (App Router)
 - **Styling**: Tailwind CSS + Custom CSS
 - **State**: React Hooks (useState)
@@ -165,6 +183,7 @@ export function YourComponent({ ...props }) {
 - **Fonts**: Space Grotesk (Google Fonts)
 
 ### Performance
+
 - Server-side rendering
 - Optimized animations (GPU-accelerated)
 - Minimal re-renders
@@ -172,6 +191,7 @@ export function YourComponent({ ...props }) {
 - Code splitting
 
 ### Browser Support
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+
@@ -202,6 +222,7 @@ export function YourComponent({ ...props }) {
 ## 🌐 Deployment
 
 The platform is ready to deploy to:
+
 - **Vercel**: `vercel --prod`
 - **Netlify**: `npm run build && netlify deploy`
 - **Custom**: Build with `npm run build`
@@ -209,6 +230,7 @@ The platform is ready to deploy to:
 ## 📝 Design Credits
 
 Based on design files:
+
 - `responsive_mobile_view.html`
 - `project_insights___history.html`
 - `project_hub.html`

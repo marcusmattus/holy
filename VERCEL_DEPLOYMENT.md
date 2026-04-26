@@ -25,6 +25,7 @@ vercel --prod
 ### Method 2: Vercel Dashboard
 
 1. **Push to GitHub**:
+
    ```bash
    cd /Users/marcusmattus/holy
    git add .
@@ -78,6 +79,7 @@ Build has been tested and passed successfully:
 When you deploy, these features will be live:
 
 ### Routes
+
 - `/` - Main landing page
 - `/platform` - **Holy Platform UI** (Project Hub, AI Workspace, Insights, Deploy)
 - `/dashboard` - Dashboard pages
@@ -85,6 +87,7 @@ When you deploy, these features will be live:
 - `/pricing` - Pricing page
 
 ### Platform Features
+
 ✅ Project Hub with cards
 ✅ AI Workspace with chat
 ✅ Project Insights dashboard
@@ -117,6 +120,7 @@ After deploying:
 ### Performance
 
 The platform is optimized for:
+
 - Fast initial load (< 2s)
 - Smooth animations (60fps)
 - Efficient code splitting
@@ -125,6 +129,7 @@ The platform is optimized for:
 ## 📊 Monitoring
 
 Vercel provides built-in:
+
 - Analytics
 - Speed Insights
 - Error tracking
@@ -133,6 +138,7 @@ Vercel provides built-in:
 ## 🔒 Security
 
 Production features:
+
 - HTTPS by default
 - Edge network (CDN)
 - DDoS protection
@@ -158,6 +164,7 @@ npx vercel --prod
 ```
 
 Follow the prompts:
+
 - Project name: `holy-platform`
 - Framework: `Next.js` (auto-detected)
 - Root directory: `apps/holy`

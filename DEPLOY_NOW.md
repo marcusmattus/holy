@@ -23,6 +23,7 @@ cd /Users/marcusmattus/holy
 ```
 
 This script will:
+
 1. Check for Vercel CLI (install if needed)
 2. Run pre-flight checks
 3. Deploy to production
@@ -42,12 +43,14 @@ vercel --prod
 ```
 
 Follow the prompts:
+
 - **Set up and deploy?** Yes
 - **Link to existing project?** No (first time) or Yes (subsequent)
 - **Project name:** holy-platform (or your choice)
 - **Which directory:** `./` (root)
 
 Vercel will auto-detect:
+
 - Framework: Next.js
 - Build Command: `npm run build`
 - Output Directory: `.next`
@@ -141,6 +144,7 @@ cd /Users/marcusmattus/holy && vercel --prod
 Your complete Holy Platform including:
 
 ### Features:
+
 - ✨ Project Hub with search
 - 🤖 AI Workspace with chat
 - 📊 Project Insights dashboard
@@ -150,6 +154,7 @@ Your complete Holy Platform including:
 - ⚡ All animations and effects
 
 ### Design System:
+
 - Space Grotesk typography
 - Gold accent color (#C9A24A)
 - Ethereal backgrounds
@@ -212,6 +217,7 @@ npm run build
 ### Need Help?
 
 Check the deployment logs:
+
 1. Vercel Dashboard
 2. Your Project
 3. Deployments tab
@@ -220,7 +226,7 @@ Check the deployment logs:
 
 ## 🎉 Ready to Deploy!
 
-Your Holy Platform is **production-ready**. 
+Your Holy Platform is **production-ready**.
 
 Choose your deployment method above and go live! 🚀
 

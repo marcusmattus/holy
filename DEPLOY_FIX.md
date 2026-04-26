@@ -36,6 +36,7 @@ vercel --prod
 ```
 
 When prompted, configure:
+
 - **Root Directory:** `apps/holy`
 - **Framework Preset:** Next.js (should auto-detect)
 - **Build Command:** `npm run build` (auto-detected)
@@ -61,6 +62,7 @@ This is the easiest and most reliable method!
 ## ✅ Verification
 
 After deployment, verify:
+
 1. Platform loads: `https://your-project.vercel.app/platform`
 2. All routes work
 3. Assets load correctly

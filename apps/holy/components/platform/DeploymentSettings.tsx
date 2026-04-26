@@ -3,7 +3,136 @@ import { useState } from 'react'
 export function DeploymentSettings({ project, onBack, onSuccess }: any) {
   const [isDeploying, setIsDeploying] = useState(false)
   const [deploySuccess, setDeploySuccess] = useState(false)
-  const [config, setConfig] = useState({ domain: `${project?.name?.toLowerCase().replace(/\s+/g, '-') || 'app'}.holy.app`, environment: 'Production', visibility: 'Public', autoDeploy: true })
-  const handleDeploy = () => { setIsDeploying(true); setTimeout(() => { setIsDeploying(false); setDeploySuccess(true) }, 4000) }
-  return (<div className="min-h-screen flex flex-col"><nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/20 backdrop-blur-md px-8 py-4"><div className="max-w-[1400px] mx-auto flex items-center justify-between"><div className="flex items-center space-x-8"><button onClick={onBack} className="flex items-center space-x-2"><div className="w-8 h-8 rounded-full border border-[#C9A24A] flex items-center justify-center font-bold text-lg">H</div><span className="font-bold tracking-tighter text-xl mt-0.5 uppercase">HOLY</span></button><div className="text-white/20 text-xs tracking-widest uppercase font-medium">{project?.name || 'Project'} / <span className="text-white">Deployment</span></div></div></div></nav><main className="flex-grow flex items-center justify-center p-8"><div className="w-full max-w-4xl"><div className="glass-panel rounded-[40px] p-10">{!isDeploying && !deploySuccess && (<><header className="mb-10"><h1 className="text-4xl font-bold tracking-tight mb-2">Deployment Settings</h1><p className="text-white/40">Configure your application gateway.</p></header><div className="space-y-8"><div className="space-y-3"><label className="text-xs font-bold uppercase tracking-widest text-white/60">Target Domain</label><input type="text" value={config.domain} onChange={(e) => setConfig({...config, domain: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-lg font-light text-white/90 focus:outline-none focus:border-[#C9A24A]/50"/></div><div className="pt-6"><button onClick={handleDeploy} className="w-full bg-[#C9A24A] text-black py-5 rounded-2xl font-bold text-lg shadow-[0_0_25px_rgba(201,162,74,0.2)] hover:scale-[1.01] transition-all flex items-center justify-center space-x-3"><span>Deploy to Production</span><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></button></div></div></>)}{isDeploying && (<div className="p-20 flex flex-col items-center text-center space-y-8"><div className="w-24 h-24 rounded-full border-2 border-[#C9A24A]/20 flex items-center justify-center"><div className="w-16 h-16 rounded-full border-b-2 border-[#C9A24A] animate-spin"></div></div><h2 className="text-3xl font-bold">Deploying...</h2></div>)}{deploySuccess && (<div className="p-12 text-center space-y-6"><div className="w-16 h-16 bg-[#C9A24A] rounded-full flex items-center justify-center mx-auto"><svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div><h2 className="text-4xl font-bold">Universe Launched!</h2><p className="text-lg text-white/60">Your app is live at <span className="text-[#C9A24A]">{config.domain}</span></p><div className="flex justify-center space-x-4 pt-4"><button className="px-8 py-3 bg-white text-black font-bold rounded-xl">Open App</button><button onClick={onSuccess} className="px-8 py-3 bg-white/5 border border-white/10 font-bold rounded-xl">Back to Hub</button></div></div>)}</div></div></main></div>)
+  const [config, setConfig] = useState({
+    domain: `${project?.name?.toLowerCase().replace(/\s+/g, '-') || 'app'}.holy.app`,
+    environment: 'Production',
+    visibility: 'Public',
+    autoDeploy: true,
+  })
+  const handleDeploy = () => {
+    setIsDeploying(true)
+    setTimeout(() => {
+      setIsDeploying(false)
+      setDeploySuccess(true)
+    }, 4000)
+  }
+  return (
+    <div className="min-h-screen flex flex-col">
+      <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/20 backdrop-blur-md px-8 py-4">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <button onClick={onBack} className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-full border border-[#C9A24A] flex items-center justify-center font-bold text-lg">
+                H
+              </div>
+              <span className="font-bold tracking-tighter text-xl mt-0.5 uppercase">
+                HOLY
+              </span>
+            </button>
+            <div className="text-white/20 text-xs tracking-widest uppercase font-medium">
+              {project?.name || 'Project'} /{' '}
+              <span className="text-white">Deployment</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <main className="flex-grow flex items-center justify-center p-8">
+        <div className="w-full max-w-4xl">
+          <div className="glass-panel rounded-[40px] p-10">
+            {!isDeploying && !deploySuccess && (
+              <>
+                <header className="mb-10">
+                  <h1 className="text-4xl font-bold tracking-tight mb-2">
+                    Deployment Settings
+                  </h1>
+                  <p className="text-white/40">
+                    Configure your application gateway.
+                  </p>
+                </header>
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-widest text-white/60">
+                      Target Domain
+                    </label>
+                    <input
+                      type="text"
+                      value={config.domain}
+                      onChange={(e) =>
+                        setConfig({ ...config, domain: e.target.value })
+                      }
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-lg font-light text-white/90 focus:outline-none focus:border-[#C9A24A]/50"
+                    />
+                  </div>
+                  <div className="pt-6">
+                    <button
+                      onClick={handleDeploy}
+                      className="w-full bg-[#C9A24A] text-black py-5 rounded-2xl font-bold text-lg shadow-[0_0_25px_rgba(201,162,74,0.2)] hover:scale-[1.01] transition-all flex items-center justify-center space-x-3"
+                    >
+                      <span>Deploy to Production</span>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+            {isDeploying && (
+              <div className="p-20 flex flex-col items-center text-center space-y-8">
+                <div className="w-24 h-24 rounded-full border-2 border-[#C9A24A]/20 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full border-b-2 border-[#C9A24A] animate-spin"></div>
+                </div>
+                <h2 className="text-3xl font-bold">Deploying...</h2>
+              </div>
+            )}
+            {deploySuccess && (
+              <div className="p-12 text-center space-y-6">
+                <div className="w-16 h-16 bg-[#C9A24A] rounded-full flex items-center justify-center mx-auto">
+                  <svg
+                    className="w-8 h-8 text-black"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="3"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                </div>
+                <h2 className="text-4xl font-bold">Universe Launched!</h2>
+                <p className="text-lg text-white/60">
+                  Your app is live at{' '}
+                  <span className="text-[#C9A24A]">{config.domain}</span>
+                </p>
+                <div className="flex justify-center space-x-4 pt-4">
+                  <button className="px-8 py-3 bg-white text-black font-bold rounded-xl">
+                    Open App
+                  </button>
+                  <button
+                    onClick={onSuccess}
+                    className="px-8 py-3 bg-white/5 border border-white/10 font-bold rounded-xl"
+                  >
+                    Back to Hub
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
 }

@@ -24,6 +24,7 @@ git push origin main
 ```
 
 If you haven't initialized git yet:
+
 ```bash
 git init
 git add .
@@ -50,18 +51,21 @@ When the configuration screen appears:
 #### ⚙️ Required Settings:
 
 **Framework Preset:**
+
 ```
 Next.js
 ```
 
 **Root Directory:** ← **CRITICAL!**
+
 ```
 apps/holy
 ```
 
 **Build & Development Settings:**
+
 - Build Command: `npm run build` (auto-detected)
-- Output Directory: `.next` (auto-detected)  
+- Output Directory: `.next` (auto-detected)
 - Install Command: `npm install` (auto-detected)
 
 Leave other settings as default.
@@ -109,6 +113,7 @@ Dashboard: https://your-project.vercel.app/dashboard
 ## 📊 Continuous Deployment
 
 Once set up, every push to `main` branch automatically:
+
 - ✅ Triggers new deployment
 - ✅ Builds and tests
 - ✅ Deploys to production
@@ -121,6 +126,7 @@ Once set up, every push to `main` branch automatically:
 ### Build Fails?
 
 Check these settings in Vercel Dashboard:
+
 - **Root Directory** must be `apps/holy`
 - **Framework** must be Next.js
 - **Node Version** should be 22.x
@@ -128,13 +134,14 @@ Check these settings in Vercel Dashboard:
 ### Platform Not Loading?
 
 - Clear browser cache
-- Try incognito mode  
+- Try incognito mode
 - Check deployment logs in Vercel Dashboard
 - Verify `/platform` route exists
 
 ### Need to Redeploy?
 
 Two options:
+
 1. **Push to GitHub:** Changes auto-deploy
 2. **Manual Redeploy:** Vercel Dashboard → Deployments → "⋯" → Redeploy
 
@@ -157,6 +164,7 @@ Two options:
 Follow the steps above and your **Holy Platform** will be live in minutes!
 
 **Quick Summary:**
+
 1. Push to GitHub
 2. Import on Vercel
 3. Set Root Directory to `apps/holy`

@@ -59,6 +59,7 @@ vercel --prod
 ### 🔧 Vercel Auto-Configuration
 
 Vercel will automatically detect:
+
 - ✅ Framework: Next.js 16
 - ✅ Build Command: `npm run build`
 - ✅ Output Directory: `.next`

@@ -8,7 +8,9 @@ import { DeploymentSettings } from '@/components/platform/DeploymentSettings'
 import { ErrorSuppression } from './error-suppression'
 
 export default function PlatformPage() {
-  const [currentView, setCurrentView] = useState<'hub' | 'workspace' | 'insights' | 'deploy'>('hub')
+  const [currentView, setCurrentView] = useState<
+    'hub' | 'workspace' | 'insights' | 'deploy'
+  >('hub')
   const [selectedProject, setSelectedProject] = useState<any>(null)
 
   return (
@@ -21,40 +23,40 @@ export default function PlatformPage() {
           <div className="grain" />
         </div>
 
-      {/* Main Content */}
-      {currentView === 'hub' && (
-        <ProjectHub 
-          onSelectProject={(project) => {
-            setSelectedProject(project)
-            setCurrentView('workspace')
-          }}
-          onNewProject={() => setCurrentView('workspace')}
-        />
-      )}
-      
-      {currentView === 'workspace' && (
-        <AIWorkspace 
-          project={selectedProject}
-          onBack={() => setCurrentView('hub')}
-          onDeploy={() => setCurrentView('deploy')}
-          onViewInsights={() => setCurrentView('insights')}
-        />
-      )}
-      
-      {currentView === 'insights' && (
-        <ProjectInsights 
-          project={selectedProject}
-          onBack={() => setCurrentView('workspace')}
-        />
-      )}
-      
-      {currentView === 'deploy' && (
-        <DeploymentSettings 
-          project={selectedProject}
-          onBack={() => setCurrentView('workspace')}
-          onSuccess={() => setCurrentView('hub')}
-        />
-      )}
+        {/* Main Content */}
+        {currentView === 'hub' && (
+          <ProjectHub
+            onSelectProject={(project) => {
+              setSelectedProject(project)
+              setCurrentView('workspace')
+            }}
+            onNewProject={() => setCurrentView('workspace')}
+          />
+        )}
+
+        {currentView === 'workspace' && (
+          <AIWorkspace
+            project={selectedProject}
+            onBack={() => setCurrentView('hub')}
+            onDeploy={() => setCurrentView('deploy')}
+            onViewInsights={() => setCurrentView('insights')}
+          />
+        )}
+
+        {currentView === 'insights' && (
+          <ProjectInsights
+            project={selectedProject}
+            onBack={() => setCurrentView('workspace')}
+          />
+        )}
+
+        {currentView === 'deploy' && (
+          <DeploymentSettings
+            project={selectedProject}
+            onBack={() => setCurrentView('workspace')}
+            onSuccess={() => setCurrentView('hub')}
+          />
+        )}
       </div>
     </>
   )
