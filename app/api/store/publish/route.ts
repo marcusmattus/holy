@@ -1,6 +1,9 @@
+import { PricingModel } from '@prisma/client'
+import { publishProjectListing } from '@/server/services/store.service'
+
 export async function POST(req: Request) {
   const body = await req.json()
-  const { projectId, name, description } = body
+  const { projectId, name, description, price, pricingModel } = body
 
   if (!projectId || typeof projectId !== 'string') {
     return Response.json({ error: 'projectId is required' }, { status: 400 })
@@ -12,7 +15,16 @@ export async function POST(req: Request) {
     return Response.json({ error: 'description is required' }, { status: 400 })
   }
 
-  // TODO: persist listing to database
+  const listing = await publishProjectListing({
+    projectId,
+    name,
+    description,
+    price: typeof price === 'number' ? price : undefined,
+    pricingModel:
+      pricingModel && Object.values(PricingModel).includes(pricingModel)
+        ? pricingModel
+        : undefined,
+  })
 
-  return Response.json({ success: true, projectId, name, description })
+  return Response.json({ success: true, listing })
 }
