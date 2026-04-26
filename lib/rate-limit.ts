@@ -11,6 +11,8 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>()
 
+// In-memory limiter for local/single-instance usage.
+// For multi-instance production deployments, replace with a shared store (e.g. Redis).
 export function checkRateLimit({ key, limit, windowMs }: LimitOptions) {
   const now = Date.now()
   const existing = buckets.get(key)

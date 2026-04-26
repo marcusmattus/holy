@@ -26,9 +26,10 @@ async function ensureProject(projectId: string) {
 }
 
 function sanitizeEnvVars(envVars: Record<string, string> = {}) {
+  const unsafePatterns = ['secret', 'token', 'password', 'key', 'api', 'private']
   const entries = Object.entries(envVars).filter(([key]) => {
     const normalized = key.toLowerCase()
-    return !normalized.includes('secret') && !normalized.includes('token')
+    return !unsafePatterns.some((pattern) => normalized.includes(pattern))
   })
 
   return Object.fromEntries(entries)
