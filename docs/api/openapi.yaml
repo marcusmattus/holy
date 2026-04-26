@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: Holy Public API
+  version: 0.1.0
+servers:
+  - url: https://holy.holysticlabs.com
+components:
+  securitySchemes:
+    bearerApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+security:
+  - bearerApiKey: []
+paths:
+  /api/v1/projects:
+    get:
+      summary: List projects
+    post:
+      summary: Create project
+  /api/v1/projects/{projectId}:
+    get:
+      summary: Get project
+  /api/v1/projects/{projectId}/generate:
+    post:
+      summary: Generate files for a project
+  /api/v1/projects/{projectId}/deploy:
+    post:
+      summary: Deploy project
+  /api/v1/store/listings:
+    get:
+      summary: List store listings
+  /api/v1/templates:
+    get:
+      summary: List templates
+    post:
+      summary: Fork/create template
+  /api/agents/{agentId}/runs:
+    post:
+      summary: Trigger agent run
+  /api/agents/runs/{runId}/approve:
+    post:
+      summary: Approve agent run
+  /api/agents/runs/{runId}/apply:
+    post:
+      summary: Apply approved run proposal
