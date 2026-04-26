@@ -118,7 +118,7 @@ function getFallbackListing(slug: string): StoreListingView | null {
     price: listing.price,
     installs: listing.installs,
     views: listing.views,
-    conversionRate: listing.installs / listing.views,
+    conversionRate: listing.views > 0 ? listing.installs / listing.views : 0,
   }
 }
 
@@ -132,7 +132,7 @@ export async function getRelatedListings(slug: string): Promise<StoreListingView
     price: item.price,
     installs: item.installs,
     views: item.views,
-    conversionRate: item.installs / item.views,
+    conversionRate: item.views > 0 ? item.installs / item.views : 0,
   }))
 
   try {

@@ -20,7 +20,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
   }
   if (!files || typeof files !== 'object' || Object.keys(files).length === 0) {
-    return NextResponse.json({ error: 'files is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'files is required and must not be empty' },
+      { status: 400 },
+    )
   }
 
   try {

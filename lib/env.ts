@@ -7,6 +7,7 @@ const envSchema = z.object({
   VERCEL_PROJECT_ID: z.string().min(1).optional(),
   STRIPE_SECRET_KEY: z.string().min(1).optional(),
   STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  PAYOUT_CURRENCY: z.string().regex(/^[A-Z]{3}$/).optional(),
   CRON_SECRET: z.string().min(1).optional(),
 })
 

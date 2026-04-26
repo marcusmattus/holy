@@ -5,14 +5,19 @@ type CreatorSummary = {
   pendingCents: number
   paidOutCents: number
   referralRevenueCents: number
+  currency: string
   topAppsByRevenue: Array<{
     listingId: string | null
     revenueCents: number
   }>
 }
 
-function formatMoney(amountCents: number) {
-  return `£${(amountCents / 100).toFixed(2)}`
+function formatMoney(amountCents: number, currency: string) {
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amountCents / 100)
 }
 
 export function CreatorEarningsPanel({ summary }: { summary: CreatorSummary }) {
@@ -22,12 +27,24 @@ export function CreatorEarningsPanel({ summary }: { summary: CreatorSummary }) {
       <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         Creator earnings
       </p>
-      <h2 className="mt-2 text-2xl font-semibold">{formatMoney(total)}</h2>
+      <h2 className="mt-2 text-2xl font-semibold">{formatMoney(total, summary.currency)}</h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Available payout" value={formatMoney(summary.availableCents)} />
-        <Metric label="Pending shares" value={formatMoney(summary.pendingCents)} />
-        <Metric label="Paid out total" value={formatMoney(summary.paidOutCents)} />
-        <Metric label="Referral revenue" value={formatMoney(summary.referralRevenueCents)} />
+        <Metric
+          label="Available payout"
+          value={formatMoney(summary.availableCents, summary.currency)}
+        />
+        <Metric
+          label="Pending shares"
+          value={formatMoney(summary.pendingCents, summary.currency)}
+        />
+        <Metric
+          label="Paid out total"
+          value={formatMoney(summary.paidOutCents, summary.currency)}
+        />
+        <Metric
+          label="Referral revenue"
+          value={formatMoney(summary.referralRevenueCents, summary.currency)}
+        />
       </div>
       <div className="mt-6">
         <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -43,7 +60,9 @@ export function CreatorEarningsPanel({ summary }: { summary: CreatorSummary }) {
                 className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm"
               >
                 <span>{app.listingId ?? 'Unmapped listing'}</span>
-                <span className="font-semibold">{formatMoney(app.revenueCents)}</span>
+                <span className="font-semibold">
+                  {formatMoney(app.revenueCents, summary.currency)}
+                </span>
               </div>
             ))
           )}

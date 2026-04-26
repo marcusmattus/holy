@@ -15,6 +15,7 @@ export default async function CreatorDashboardPage() {
       pendingCents: 0,
       paidOutCents: 0,
       referralRevenueCents: 0,
+      currency: 'GBP',
       topAppsByRevenue: [],
     })),
     prisma.creatorPayoutAccount.findUnique({ where: { userId } }).catch(() => null),

@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 type PayoutRow = {
   id: string
   amountCents: number
@@ -8,8 +10,12 @@ type PayoutRow = {
   createdAt: string
 }
 
-function formatMoney(amountCents: number) {
-  return `£${(amountCents / 100).toFixed(2)}`
+function formatMoney(amountCents: number, currency: string) {
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2,
+  }).format(amountCents / 100)
 }
 
 export function PayoutHistory({
@@ -21,13 +27,15 @@ export function PayoutHistory({
   userId: string
   canRequest: boolean
 }) {
+  const router = useRouter()
+
   async function requestPayout() {
     await fetch('/api/payouts/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     })
-    window.location.reload()
+    router.refresh()
   }
 
   return (
@@ -54,7 +62,9 @@ export function PayoutHistory({
               className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm"
             >
               <div>
-                <p className="font-medium">{formatMoney(payout.amountCents)}</p>
+                <p className="font-medium">
+                  {formatMoney(payout.amountCents, payout.currency)}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(payout.createdAt).toLocaleDateString()} · {payout.currency}
                 </p>

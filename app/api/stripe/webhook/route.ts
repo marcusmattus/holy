@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { getStripeClient } from '@/server/stripe/client'
 import { prisma } from '@/server/db/client'
 import { requireEnv } from '@/lib/env'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: Request) {
   const { STRIPE_WEBHOOK_SECRET } = requireEnv(['STRIPE_WEBHOOK_SECRET'])
@@ -40,6 +41,11 @@ export async function POST(req: Request) {
       eventId: event.id,
       eventType: event.type,
     },
+  })
+
+  logger.info('stripe_webhook_received', {
+    eventId: event.id,
+    eventType: event.type,
   })
 
   return NextResponse.json({ ok: true })

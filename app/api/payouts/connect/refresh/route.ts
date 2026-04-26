@@ -10,7 +10,7 @@ export async function GET(req: Request) {
 
   try {
     const url = await createPayoutOnboardingLink(userId)
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL(url))
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to refresh onboarding' },

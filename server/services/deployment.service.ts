@@ -3,7 +3,10 @@ import { getDeploymentProvider } from '@/server/deployments/provider-factory'
 import type { DeploymentInput } from '@/server/deployments/deployment-provider'
 import { logger } from '@/lib/logger'
 
-const UNSAFE_ENV_KEY = /(?:SECRET|TOKEN|PASSWORD|PRIVATE|DATABASE_URL|API_KEY|KEY)$/i
+const UNSAFE_ENV_KEY_PATTERN =
+  /(?:^|_)(?:SECRET|TOKEN|PASSWORD|PRIVATE|DATABASE_URL|API_KEY|KEY)(?:_|$)/i
+const DEPLOYMENT_STATUS_POLL_ATTEMPTS = 5
+const DEPLOYMENT_STATUS_POLL_INTERVAL_MS = 3_000
 
 function normalizeFiles(files: Record<string, string>) {
   return Object.fromEntries(
@@ -19,8 +22,10 @@ function sanitizeEnv(env: DeploymentInput['env']) {
     Object.entries(env).filter(([key, value]) => {
       if (!key || !value) return false
       if (!/^[A-Z][A-Z0-9_]*$/.test(key)) return false
-      if (key.startsWith('NEXT_PUBLIC_')) return true
-      return !UNSAFE_ENV_KEY.test(key)
+      if (key.startsWith('NEXT_PUBLIC_')) {
+        return !/(?:SECRET|TOKEN|PASSWORD|PRIVATE)/i.test(key)
+      }
+      return !UNSAFE_ENV_KEY_PATTERN.test(key)
     }),
   )
 }
@@ -78,8 +83,12 @@ export async function pollDeploymentStatus(deploymentId: string, externalId: str
   const provider = getDeploymentProvider()
   let latest = await provider.getDeploymentStatus(externalId)
 
-  for (let attempt = 0; attempt < 2 && latest.status === 'BUILDING'; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 120))
+  for (
+    let attempt = 0;
+    attempt < DEPLOYMENT_STATUS_POLL_ATTEMPTS && latest.status === 'BUILDING';
+    attempt += 1
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, DEPLOYMENT_STATUS_POLL_INTERVAL_MS))
     latest = await provider.getDeploymentStatus(externalId)
   }
 

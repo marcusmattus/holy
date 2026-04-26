@@ -56,7 +56,7 @@ export async function aggregateAnalyticsForWindow(windowStart: Date, windowEnd: 
     if (event.eventType === 'LISTING_INSTALL') existing.installs += 1
     if (event.eventType === 'LISTING_PURCHASE') {
       existing.purchases += 1
-      existing.revenueCents += event.revenueCents
+      existing.revenueCents += event.revenueCents ?? 0
     }
     if (event.eventType === 'LISTING_REFERRAL') existing.referrals += 1
 

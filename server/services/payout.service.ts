@@ -1,5 +1,10 @@
 import { prisma } from '@/server/db/client'
 import { stripe } from '@/server/stripe/client'
+import { getEnv } from '@/lib/env'
+
+function getPayoutCurrency() {
+  return getEnv().PAYOUT_CURRENCY || 'GBP'
+}
 
 export async function getAvailablePayoutBalance(userId: string) {
   const shares = await prisma.revenueShare.findMany({
@@ -29,7 +34,7 @@ export async function requestCreatorPayout(userId: string) {
     data: {
       userId,
       amountCents,
-      currency: 'gbp',
+      currency: getPayoutCurrency(),
       status: 'PROCESSING',
     },
   })
@@ -37,7 +42,7 @@ export async function requestCreatorPayout(userId: string) {
   try {
     const transfer = await stripe.transfers.create({
       amount: amountCents,
-      currency: 'gbp',
+      currency: getPayoutCurrency(),
       destination: account.stripeAccountId,
       metadata: {
         payoutId: payout.id,
@@ -112,6 +117,7 @@ export async function getCreatorPayoutSummary(userId: string) {
     pendingCents: pending._sum.amountCents ?? 0,
     paidOutCents: paid._sum.amountCents ?? 0,
     referralRevenueCents: referral._sum.amountCents ?? 0,
+    currency: getPayoutCurrency(),
     topAppsByRevenue: topApps.map((row) => ({
       listingId: row.listingId,
       revenueCents: row._sum.amountCents ?? 0,

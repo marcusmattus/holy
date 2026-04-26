@@ -3,11 +3,14 @@ import { requestCreatorPayout } from '@/server/services/payout.service'
 import { checkRateLimit, getRequestRateLimitKey } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 
+const PAYOUT_REQUEST_RATE_LIMIT = 3
+const PAYOUT_REQUEST_RATE_LIMIT_WINDOW_MS = 60_000
+
 export async function POST(req: Request) {
   const limiter = checkRateLimit({
     key: getRequestRateLimitKey(req, 'payouts:request'),
-    limit: 8,
-    windowMs: 60_000,
+    limit: PAYOUT_REQUEST_RATE_LIMIT,
+    windowMs: PAYOUT_REQUEST_RATE_LIMIT_WINDOW_MS,
   })
   if (!limiter.success) {
     return NextResponse.json({ error: 'Too many payout requests' }, { status: 429 })

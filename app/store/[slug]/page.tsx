@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { prisma } from '@/server/db/client'
 import { getRelatedListings, getStoreListingBySlug } from '@/server/services/store-listing.service'
 import { ListingOptimizationPanel } from '@/features/store/components/ListingOptimizationPanel'
+import { logger } from '@/lib/logger'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -47,7 +48,12 @@ export default async function StoreListingPage({ params, searchParams }: PagePro
         metadata: ref ? { referralCode: ref } : undefined,
       },
     })
-    .catch(() => null)
+    .catch((error) => {
+      logger.warn('store_view_analytics_failed', {
+        listingId: listing.id,
+        error: error instanceof Error ? error.message : 'Unknown analytics error',
+      })
+    })
 
   const related = await getRelatedListings(slug)
 
