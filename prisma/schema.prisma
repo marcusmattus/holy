@@ -8,21 +8,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                          String                 @id @default(cuid())
+  email                       String                 @unique
+  projects                    Project[]
+  createdTemplates            Template[]             @relation("TemplateCreator")
+  templatePurchases           TemplatePurchase[]     @relation("TemplateBuyer")
+  subscriptionsAsCreator      CreatorSubscription[]  @relation("CreatorSubscriptionsAsCreator")
+  subscriptionsAsSubscriber   CreatorSubscription[]  @relation("CreatorSubscriptionsAsSubscriber")
+  storeReviews                StoreReview[]
+  templateReviews             TemplateReview[]
+  marketplaceReports          MarketplaceReport[]    @relation("ReportAuthor")
+  createdAt                   DateTime               @default(now())
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id                      String                  @id @default(cuid())
+  name                    String
+  userId                  String
+  user                    User                    @relation(fields: [userId], references: [id])
+  versions                ProjectVersion[]
+  listings                StoreListing[]
+  deployments             Deployment[]
+  collaborationRooms      CollaborationRoom[]
+  collaborationSnapshots  CollaborationSnapshot[]
+  qaRuns                  QaRun[]
+  growthSuggestions       GrowthSuggestion[]
+  createdAt               DateTime                @default(now())
 }
 
 model ProjectVersion {
@@ -34,14 +45,17 @@ model ProjectVersion {
 }
 
 model StoreListing {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String
-  description String
-  price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id                String             @id @default(cuid())
+  projectId         String
+  project           Project            @relation(fields: [projectId], references: [id])
+  name              String
+  description       String
+  price             Float?
+  isPublished       Boolean            @default(false)
+  growthSuggestions GrowthSuggestion[]
+  reviews           StoreReview[]
+  reports           MarketplaceReport[]
+  createdAt         DateTime           @default(now())
 }
 
 model Deployment {
@@ -51,4 +65,255 @@ model Deployment {
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model CollaborationRoom {
+  id        String     @id @default(cuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roomKey   String     @unique
+  provider  String     @default("yjs")
+  status    RoomStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CollaborationSnapshot {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filePath  String
+  content   String
+  provider  String   @default("yjs")
+  createdAt DateTime @default(now())
+}
+
+model Template {
+  id               String              @id @default(cuid())
+  creatorId        String
+  creator          User                @relation("TemplateCreator", fields: [creatorId], references: [id])
+  name             String
+  description      String
+  priceCents       Int                 @default(0)
+  currency         String              @default("gbp")
+  isPaid           Boolean             @default(false)
+  isSubscriberOnly Boolean             @default(false)
+  includedFiles    Json?
+  isPublished      Boolean             @default(false)
+  forkCount        Int                 @default(0)
+  purchases        TemplatePurchase[]
+  reviews          TemplateReview[]
+  reports          MarketplaceReport[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model TemplatePurchase {
+  id                 String         @id @default(cuid())
+  templateId         String
+  template           Template       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  buyerId            String
+  buyer              User           @relation("TemplateBuyer", fields: [buyerId], references: [id])
+  amountCents        Int
+  currency           String         @default("gbp")
+  status             PurchaseStatus @default(PENDING)
+  stripeSessionId    String?        @unique
+  stripePaymentIntent String?       @unique
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model CreatorSubscription {
+  id                    String                     @id @default(cuid())
+  creatorId             String
+  creator               User                       @relation("CreatorSubscriptionsAsCreator", fields: [creatorId], references: [id])
+  subscriberId          String
+  subscriber            User                       @relation("CreatorSubscriptionsAsSubscriber", fields: [subscriberId], references: [id])
+  status                CreatorSubscriptionStatus  @default(PENDING)
+  stripeCheckoutSessionId String?                  @unique
+  stripeSubscriptionId  String?                    @unique
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+
+  @@unique([creatorId, subscriberId])
+}
+
+model StripeWebhookEvent {
+  id        String   @id
+  type      String
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model GrowthSuggestion {
+  id          String               @id @default(cuid())
+  projectId   String?
+  project     Project?             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     StoreListing?        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  type        GrowthSuggestionType
+  title       String
+  description String
+  impact      SuggestionImpact     @default(MEDIUM)
+  status      SuggestionStatus     @default(PENDING)
+  patchJson   Json?
+  metadata    Json?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model StoreReview {
+  id        String       @id @default(cuid())
+  listingId String
+  listing   StoreListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  rating    Int
+  body      String?
+  status    ReviewStatus @default(PUBLISHED)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([listingId, userId])
+}
+
+model TemplateReview {
+  id         String       @id @default(cuid())
+  templateId String
+  template   Template     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  rating     Int
+  body       String?
+  status     ReviewStatus @default(PUBLISHED)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([templateId, userId])
+}
+
+model MarketplaceReport {
+  id         String       @id @default(cuid())
+  reporterId String
+  reporter   User         @relation("ReportAuthor", fields: [reporterId], references: [id])
+  listingId  String?
+  listing    StoreListing? @relation(fields: [listingId], references: [id])
+  templateId String?
+  template   Template?    @relation(fields: [templateId], references: [id])
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model QaRun {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status    QaRunStatus
+  results   Json
+  createdAt DateTime    @default(now())
+}
+
+model SystemAlert {
+  id        String        @id @default(cuid())
+  type      AlertType
+  severity  AlertSeverity
+  title     String
+  message   String
+  status    AlertStatus   @default(OPEN)
+  metadata  Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum RoomStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CreatorSubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum GrowthSuggestionType {
+  LISTING_COPY
+  PRICING
+  UX
+  SEO
+  REFERRAL
+  PERFORMANCE
+}
+
+enum SuggestionImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SuggestionStatus {
+  PENDING
+  APPROVED
+  APPLIED
+  DISMISSED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  REMOVED
+}
+
+enum ReportReason {
+  SPAM
+  MALWARE
+  IP_VIOLATION
+  MISLEADING
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum QaRunStatus {
+  PASS
+  WARN
+  FAIL
+}
+
+enum AlertType {
+  DEPLOYMENT_FAILURE
+  STRIPE_WEBHOOK_FAILURE
+  PAYOUT_FAILURE
+  AI_PROVIDER_FAILURE
+  QA_FAILURE_SPIKE
+  REPORT_SPIKE
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
 }

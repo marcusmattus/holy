@@ -1,6 +1,8 @@
+import { prisma } from '@/server/db/prisma'
+
 export async function POST(req: Request) {
   const body = await req.json()
-  const { projectId, name, description } = body
+  const { projectId, name, description, price } = body
 
   if (!projectId || typeof projectId !== 'string') {
     return Response.json({ error: 'projectId is required' }, { status: 400 })
@@ -12,7 +14,28 @@ export async function POST(req: Request) {
     return Response.json({ error: 'description is required' }, { status: 400 })
   }
 
-  // TODO: persist listing to database
+  const latestQaRun = await prisma.qaRun.findFirst({
+    where: { projectId },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  return Response.json({ success: true, projectId, name, description })
+  if (!latestQaRun) {
+    return Response.json({ error: 'QA run is required before publish' }, { status: 400 })
+  }
+
+  if (latestQaRun.status === 'FAIL') {
+    return Response.json({ error: 'QA checks failed. Resolve issues before publish.' }, { status: 400 })
+  }
+
+  const listing = await prisma.storeListing.create({
+    data: {
+      projectId,
+      name,
+      description,
+      price: typeof price === 'number' ? price : null,
+      isPublished: true,
+    },
+  })
+
+  return Response.json({ success: true, listing })
 }
