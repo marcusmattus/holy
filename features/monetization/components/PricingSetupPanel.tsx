@@ -6,10 +6,14 @@ type PriceType = 'FREE' | 'ONE_TIME' | 'SUBSCRIPTION'
 
 export function PricingSetupPanel({
   listingId,
+  listingName = 'Monetized Listing',
+  listingDescription = 'Updated pricing setup',
   initialPriceType = 'FREE',
   initialPriceCents = 0,
 }: {
   listingId: string
+  listingName?: string
+  listingDescription?: string
   initialPriceType?: PriceType
   initialPriceCents?: number
 }) {
@@ -22,8 +26,8 @@ export function PricingSetupPanel({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         projectId: listingId,
-        name: 'Monetized Listing',
-        description: 'Updated pricing setup',
+        name: listingName,
+        description: listingDescription,
         priceType,
         priceCents,
       }),

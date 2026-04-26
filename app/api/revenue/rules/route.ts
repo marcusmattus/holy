@@ -73,6 +73,13 @@ export async function POST(req: Request) {
         rule.basisPoints >= 0
     )
 
+  if (parsedRules.length !== rules.length) {
+    return NextResponse.json(
+      { error: 'Each rule requires valid recipientId, role, and non-negative basisPoints' },
+      { status: 400 }
+    )
+  }
+
   const totalBps = parsedRules.reduce((sum, rule) => sum + rule.basisPoints, 0)
   if (totalBps > 10000) {
     return NextResponse.json(

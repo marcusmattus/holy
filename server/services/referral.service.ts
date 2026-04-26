@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto'
 import { prisma } from '@/server/db/client'
 
+const REFERRAL_REWARD_RATE = 0.05
+
 export async function createReferral(input: {
   referrerId: string
   listingId?: string
@@ -33,7 +35,7 @@ export async function recordReferralConversion(input: {
     return null
   }
 
-  const amountCents = Math.floor(input.purchaseAmountCents * 0.05)
+  const amountCents = Math.floor(input.purchaseAmountCents * REFERRAL_REWARD_RATE)
 
   return prisma.$transaction(async (tx) => {
     const converted = await tx.referral.update({

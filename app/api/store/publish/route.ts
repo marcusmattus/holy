@@ -51,7 +51,6 @@ export async function POST(req: Request) {
       title: name,
       slug,
       description,
-      price: priceCents / 100,
       priceType,
       priceCents,
       isPublished: true,
