@@ -27,8 +27,14 @@ function toJson<T>(value: string): T | null {
   }
 }
 
-function changedFiles(before: HolyFileMap, after: HolyFileMap) {
-  return Object.keys(after).filter((path) => before[path] !== after[path])
+function getChangedFiles(before: HolyFileMap, after: HolyFileMap) {
+  const paths = new Set([...Object.keys(before), ...Object.keys(after)])
+  return Array.from(paths).filter((path) => {
+    const existsBefore = Object.hasOwn(before, path)
+    const existsAfter = Object.hasOwn(after, path)
+    if (existsBefore !== existsAfter) return true
+    return before[path] !== after[path]
+  })
 }
 
 export async function POST(req: Request) {
@@ -41,9 +47,22 @@ export async function POST(req: Request) {
       ? `Active file: ${targetFile}.`
       : 'No active file provided.'
 
+  const prompt = `You are editing a React TypeScript app file map.
+${componentScope}
+Instruction: ${instruction}
+Only edit ${targetFile ?? 'the minimum required file'} unless a dependency file must also change.
+Return strict JSON with this shape:
+{
+  "summary": "short summary",
+  "files": {"/App.tsx": "..."}
+}
+Do not use markdown fences.
+Input files:
+${JSON.stringify(files)}`
+
   const { text } = await generateText({
     model: getDefaultModel(),
-    prompt: `You are editing a React TypeScript app file map.\n${componentScope}\nInstruction: ${instruction}\nOnly edit ${targetFile ?? 'the minimum required file'} unless a dependency file must also change.\nReturn strict JSON with this shape:\n{\n  "summary": "short summary",\n  "files": {"/App.tsx": "..."}\n}\nDo not use markdown fences.\nInput files:\n${JSON.stringify(files)}`,
+    prompt,
   })
 
   const parsed = toJson<{ summary?: string; files?: HolyFileMap }>(text)
@@ -51,7 +70,7 @@ export async function POST(req: Request) {
 
   return Response.json({
     summary: parsed?.summary ?? 'Patched files',
-    changedFiles: changedFiles(files, patchedFiles),
+    changedFiles: getChangedFiles(files, patchedFiles),
     files: patchedFiles,
   })
 }

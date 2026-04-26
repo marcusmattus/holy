@@ -51,6 +51,7 @@ export default function StudioLayout() {
   const [publishOpen, setPublishOpen] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [publishForm, setPublishForm] = useState({
     title: 'Untitled Project',
     description: 'Generated in Holy Studio',
@@ -98,18 +99,32 @@ export default function StudioLayout() {
       setVersions(versionsData.versions ?? [])
     }
 
-    void loadProject()
+    void loadProject().catch((error) => {
+      console.error('Failed to load project', error)
+      setErrorMessage('Failed to load project. Check your connection and try reloading Studio.')
+    })
   }, [])
 
   async function syncFiles(nextFiles: HolyFileMap) {
+    const previousFiles = files
     setFiles(nextFiles)
     if (!projectId) return
 
-    await fetch(`/api/projects/${projectId}/files`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ files: nextFiles }),
-    })
+    try {
+      const res = await fetch(`/api/projects/${projectId}/files`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: nextFiles }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to save files')
+      }
+    } catch (error) {
+      console.error(error)
+      setFiles(previousFiles)
+      setErrorMessage('Failed to sync files to the server.')
+    }
   }
 
   async function refreshVersions() {
@@ -207,6 +222,8 @@ export default function StudioLayout() {
           <button
             onClick={handleSaveVersion}
             disabled={saving || !projectId}
+            title={!projectId ? 'Project is still loading. Please wait before saving.' : undefined}
+            aria-label={saving ? 'Saving version' : 'Save Version'}
             className="rounded-xl border border-white/20 px-4 py-2 text-sm hover:border-[#C9A24A]/60 hover:text-[#C9A24A] disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save Version'}
@@ -214,12 +231,17 @@ export default function StudioLayout() {
           <button
             onClick={() => setPublishOpen(true)}
             disabled={!projectId}
+            title={!projectId ? 'Project is still loading. Please wait before publishing.' : undefined}
             className="rounded-xl bg-[#C9A24A] px-4 py-2 text-sm font-bold text-black disabled:opacity-50"
           >
             Publish
           </button>
         </div>
       </header>
+
+      {errorMessage && (
+        <div className="border-b border-red-400/30 bg-red-500/10 px-6 py-2 text-sm text-red-100">{errorMessage}</div>
+      )}
 
       <div className="flex h-[calc(100vh-81px)]">
         <aside className="w-80 space-y-4 overflow-y-auto border-r border-white/10 bg-black/30 p-4">

@@ -7,6 +7,24 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, '')
 }
 
+async function ensureUniqueSlug(baseSlug: string, projectId: string) {
+  const root = baseSlug || `project-${projectId.slice(-6)}`
+  let candidate = root
+  let count = 1
+  const maxAttempts = 100
+
+  while (count <= maxAttempts) {
+    const existing = await prisma.storeListing.findUnique({ where: { slug: candidate } })
+    if (!existing || existing.projectId === projectId) {
+      return candidate
+    }
+    candidate = `${root}-${count}`
+    count += 1
+  }
+
+  throw new Error(`Unable to generate unique listing slug after ${maxAttempts} attempts`)
+}
+
 export async function publishProject(input: {
   projectId: string
   title: string
@@ -15,12 +33,17 @@ export async function publishProject(input: {
   priceType?: 'FREE' | 'ONE_TIME' | 'SUBSCRIPTION'
   priceCents?: number
 }) {
-  const slug = slugify(input.title)
+  if (!input.title.trim()) {
+    throw new Error('Listing title is required')
+  }
+
+  const slug = await ensureUniqueSlug(slugify(input.title), input.projectId)
 
   const listing = await prisma.storeListing.upsert({
     where: { projectId: input.projectId },
     update: {
       title: input.title,
+      slug,
       description: input.description,
       category: input.category,
       priceType: input.priceType ?? 'FREE',

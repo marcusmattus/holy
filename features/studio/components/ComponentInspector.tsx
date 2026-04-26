@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import type { ComponentRegistryItem, HolyFileMap } from '../types'
 
+const MAX_INSTRUCTION_LENGTH = 1000
+
 export function ComponentInspector({
   selected,
   files,
@@ -17,6 +19,7 @@ export function ComponentInspector({
 
   async function patchComponent() {
     if (!selected || !instruction.trim()) return
+    if (instruction.length > MAX_INSTRUCTION_LENGTH) return
     setLoading(true)
 
     const res = await fetch('/api/ai/patch', {
@@ -56,10 +59,13 @@ export function ComponentInspector({
             placeholder="Change this component..."
             className="h-32 w-full resize-none rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white outline-none focus:border-[#C9A24A]/50"
           />
+          {instruction.length > MAX_INSTRUCTION_LENGTH && (
+            <p className="text-xs text-red-300">Instruction is too long (max {MAX_INSTRUCTION_LENGTH} chars).</p>
+          )}
 
           <button
             onClick={patchComponent}
-            disabled={loading}
+            disabled={loading || instruction.length > MAX_INSTRUCTION_LENGTH}
             className="w-full rounded-2xl bg-[#C9A24A] px-4 py-3 text-sm font-bold text-black disabled:opacity-50"
           >
             {loading ? 'Editing component…' : 'Patch Component'}
