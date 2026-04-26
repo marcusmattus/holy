@@ -55,7 +55,17 @@ holy/
 │   ├── editor/            # Code panel, preview, AI assistant
 │   ├── analytics/         # Charts and metrics
 │   └── ui/                # shadcn/ui components
+├── features/
+│   ├── studio/            # AI app builder
+│   ├── store/             # Marketplace module
+│   ├── protocol/          # Rewards and earnings module
+│   └── insights/          # Analytics and insights module
+├── server/
+│   ├── db/                # Prisma client
+│   ├── queues/            # Queue adapters/workers
+│   └── services/          # Backend business logic
 ├── lib/
+│   ├── ai/                # Multi-provider AI abstraction + pipelines
 │   ├── atoms.ts           # Jotai global state (editor code, model)
 │   └── utils.ts           # Shared utilities
 └── .env.example           # Required environment variables
@@ -89,4 +99,3 @@ holy/
 ## License
 
 Apache 2.0 — © 2025 Holystic Labs
-
