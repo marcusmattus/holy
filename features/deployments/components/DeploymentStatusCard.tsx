@@ -45,7 +45,7 @@ export function DeploymentStatusCard({ deployment }: { deployment: Deployment | 
         <p className="text-xs text-muted-foreground">Build logs</p>
         <div className="rounded-lg border border-border/70 bg-background/50 p-3 text-xs text-muted-foreground space-y-1 max-h-32 overflow-auto">
           {Array.isArray(deployment.logs)
-            ? (deployment.logs as string[]).map((line, index) => <p key={`${line}-${index}`}>{line}</p>)
+            ? (deployment.logs as string[]).map((line, index) => <p key={index}>{line}</p>)
             : 'No logs yet'}
         </div>
       </div>

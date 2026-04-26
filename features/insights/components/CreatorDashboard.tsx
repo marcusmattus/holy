@@ -3,6 +3,14 @@ import { KpiCard } from './KpiCard'
 import { GrowthRecommendations } from './GrowthRecommendations'
 import { getProjectGrowthRecommendations } from '@/server/services/growth-recommendation.service'
 
+const REWARD_PER_PURCHASE_CENTS = getEnvNumber('REWARD_PER_PURCHASE_CENTS', 125)
+const REVENUE_PER_PURCHASE_CENTS = getEnvNumber('REVENUE_PER_PURCHASE_CENTS', 499)
+
+function getEnvNumber(name: string, fallback: number) {
+  const parsed = Number.parseInt(process.env[name] ?? '', 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 export async function CreatorDashboard() {
   const userId = 'demo-user'
 
@@ -42,8 +50,8 @@ export async function CreatorDashboard() {
     })
     .catch(() => 0)
 
-  const rewardsCents = totals.purchases * 125
-  const revenueCents = totals.purchases * 499
+  const rewardsCents = totals.purchases * REWARD_PER_PURCHASE_CENTS
+  const revenueCents = totals.purchases * REVENUE_PER_PURCHASE_CENTS
   const conversionRate = totals.views > 0 ? (totals.installs / totals.views) * 100 : 0
   const recentDeployments = projects.flatMap((project) =>
     project.deployments.map((deployment) => ({

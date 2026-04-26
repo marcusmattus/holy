@@ -1,4 +1,5 @@
 import { prisma } from '@/server/db/client'
+import { randomBytes } from 'node:crypto'
 
 function slugify(input: string) {
   return input
@@ -7,6 +8,7 @@ function slugify(input: string) {
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 export async function POST(req: Request) {
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
     data: {
       projectId,
       name,
-      slug: `${slugify(name)}-${Date.now().toString(36)}`,
+      slug: `${slugify(name)}-${Date.now().toString(36)}-${randomBytes(2).toString('hex')}`,
       description,
       price: typeof price === 'number' ? price : 0,
       isPublished: true,

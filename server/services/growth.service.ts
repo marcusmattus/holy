@@ -2,18 +2,20 @@ import { randomBytes } from 'node:crypto'
 import { prisma } from '@/server/db/client'
 import { trackEvent } from './analytics.service'
 
-function generateCode() {
-  return randomBytes(6).toString('base64url').toLowerCase()
+const MAX_REFERRAL_CODE_ATTEMPTS = 5
+
+function generateReferralCode() {
+  return randomBytes(8).toString('base64url')
 }
 
 async function createUniqueReferral(input: { referrerId: string; listingId?: string }) {
-  for (let attempt = 0; attempt < 5; attempt += 1) {
+  for (let attempt = 0; attempt < MAX_REFERRAL_CODE_ATTEMPTS; attempt += 1) {
     try {
       return await prisma.referral.create({
         data: {
           referrerId: input.referrerId,
           listingId: input.listingId,
-          code: generateCode(),
+          code: generateReferralCode(),
         },
       })
     } catch (error: unknown) {

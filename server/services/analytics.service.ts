@@ -1,6 +1,8 @@
 import { AnalyticsEventName, Prisma } from '@prisma/client'
 import { prisma } from '@/server/db/client'
 
+const VALID_EVENT_NAMES = new Set(Object.values(AnalyticsEventName))
+
 export async function trackEvent(input: {
   projectId?: string
   listingId?: string
@@ -57,5 +59,5 @@ export async function getProjectAnalyticsSummary(projectId: string) {
 function normalizeEventName(eventName: AnalyticsEventName | string) {
   if (typeof eventName !== 'string') return eventName
   const upper = eventName.toUpperCase() as AnalyticsEventName
-  return upper in AnalyticsEventName ? upper : null
+  return VALID_EVENT_NAMES.has(upper) ? upper : null
 }

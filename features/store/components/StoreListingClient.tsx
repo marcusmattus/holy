@@ -18,6 +18,10 @@ export function StoreListingClient({ listing }: { listing: StoreListingData }) {
   const ref = searchParams.get('ref')
   const [checkoutState, setCheckoutState] = useState<'idle' | 'processing' | 'done'>('idle')
   const [referralUrl, setReferralUrl] = useState<string | null>(null)
+  const [referrerId] = useState(() => {
+    if (typeof window === 'undefined') return 'demo-user'
+    return window.localStorage.getItem('holy_user_id') ?? 'demo-user'
+  })
 
   useEffect(() => {
     void trackClientEvent({
@@ -49,7 +53,8 @@ export function StoreListingClient({ listing }: { listing: StoreListingData }) {
     })
 
     if (res.ok) {
-      setCheckoutState('done')
+      const data = await res.json().catch(() => ({}))
+      setCheckoutState(data.purchased === true || data.installed === true ? 'done' : 'idle')
       if (listing.price === 0) {
         await trackClientEvent({
           listingId: listing.id,
@@ -58,12 +63,14 @@ export function StoreListingClient({ listing }: { listing: StoreListingData }) {
           metadata: { ref },
         })
       } else {
-        await trackClientEvent({
-          listingId: listing.id,
-          projectId: listing.projectId,
-          eventName: 'PURCHASE_COMPLETED',
-          metadata: { ref, price: listing.price },
-        })
+        if (data.purchased === true) {
+          await trackClientEvent({
+            listingId: listing.id,
+            projectId: listing.projectId,
+            eventName: 'PURCHASE_COMPLETED',
+            metadata: { ref, price: listing.price },
+          })
+        }
       }
     } else {
       setCheckoutState('idle')
@@ -75,7 +82,7 @@ export function StoreListingClient({ listing }: { listing: StoreListingData }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        referrerId: 'demo-user',
+        referrerId,
         listingId: listing.id,
       }),
     })

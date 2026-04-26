@@ -1,6 +1,13 @@
 import { prisma } from '@/server/db/client'
 import { getProjectAnalyticsSummary } from './analytics.service'
 
+const MIN_VIEWS_FOR_CTA_RECOMMENDATION = 100
+const MIN_INSTALL_CONVERSION = 0.05
+const MIN_INSTALLS_FOR_PRICING_RECOMMENDATION = 20
+const MIN_PURCHASE_PER_INSTALL = 0.05
+const MIN_REFERRAL_CLICKS = 5
+const MIN_PATCHES_FOR_DEPLOYMENT_PROMPT = 10
+
 export async function getProjectGrowthRecommendations(projectId: string) {
   const [summary, referralClicks, deployments] = await Promise.all([
     getProjectAnalyticsSummary(projectId).catch(() => ({
@@ -24,20 +31,26 @@ export async function getProjectGrowthRecommendations(projectId: string) {
 
   const recommendations: string[] = []
 
-  if (summary.views > 100 && summary.installConversionRate < 0.05) {
+  if (
+    summary.views > MIN_VIEWS_FOR_CTA_RECOMMENDATION &&
+    summary.installConversionRate < MIN_INSTALL_CONVERSION
+  ) {
     recommendations.push('Improve your listing hero and install CTA to lift install conversion.')
   }
 
   const purchasePerInstall = summary.installs > 0 ? summary.purchases / summary.installs : 0
-  if (summary.installs > 20 && purchasePerInstall < 0.05) {
+  if (
+    summary.installs > MIN_INSTALLS_FOR_PRICING_RECOMMENDATION &&
+    purchasePerInstall < MIN_PURCHASE_PER_INSTALL
+  ) {
     recommendations.push('Test pricing changes or add a free tier to improve buyer activation.')
   }
 
-  if (referralClicks < 5) {
+  if (referralClicks < MIN_REFERRAL_CLICKS) {
     recommendations.push('Launch a referral campaign and share your listing link in your channels.')
   }
 
-  if (summary.patches > 10 && deployments === 0) {
+  if (summary.patches > MIN_PATCHES_FOR_DEPLOYMENT_PROMPT && deployments === 0) {
     recommendations.push('Ship a preview deployment so users can try your latest AI-improved build.')
   }
 

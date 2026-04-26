@@ -26,8 +26,20 @@ function getSessionId() {
   const key = 'holy_session_id'
   let value = window.localStorage.getItem(key)
   if (!value) {
-    value = crypto.randomUUID()
+    value =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `fallback_${fallbackRandomSegment()}`
     window.localStorage.setItem(key, value)
   }
   return value
+}
+
+function fallbackRandomSegment() {
+  if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
+    const bytes = new Uint8Array(8)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  }
+  return Math.random().toString(36).slice(2)
 }

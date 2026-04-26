@@ -4,6 +4,8 @@ import { SimulatedDeploymentProvider } from '@/server/deployments/deployment-pro
 import { VercelDeploymentProvider } from '@/server/deployments/vercel.provider'
 import { trackEvent } from '@/server/services/analytics.service'
 
+// Local-process fallback for environments without a configured database.
+// This is intentionally ephemeral and should not be relied on for production persistence.
 const fallbackDeployments = new Map<string, Record<string, unknown>>()
 
 function getDeploymentProvider() {
@@ -33,6 +35,7 @@ export async function deployProject(input: {
       },
     })
   } catch {
+    console.warn('Deployment persistence unavailable; using in-memory fallback record')
     created = { id: `sim_local_${Date.now()}` }
   }
 
