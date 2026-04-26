@@ -1,12 +1,60 @@
 import { PricingModel } from '@prisma/client'
 import { prisma } from '@/server/db/client'
 
+const PROJECT_ID_SUFFIX_LENGTH = 6
+const MAX_SLUG_ATTEMPTS = 20
+
 function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+  const input = value.toLowerCase()
+  let result = ''
+  let previousWasDash = false
+
+  for (const char of input) {
+    const isAlphaNumeric =
+      (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')
+
+    if (isAlphaNumeric) {
+      result += char
+      previousWasDash = false
+      continue
+    }
+
+    if (!previousWasDash) {
+      result += '-'
+      previousWasDash = true
+    }
+  }
+
+  while (result.startsWith('-')) {
+    result = result.slice(1)
+  }
+
+  while (result.endsWith('-')) {
+    result = result.slice(0, -1)
+  }
+
+  return result
+}
+
+async function resolveUniqueSlug(baseSlug: string, projectId: string) {
+  const fallbackSlug = baseSlug || 'holy-app'
+  const projectSuffix = projectId.slice(-PROJECT_ID_SUFFIX_LENGTH)
+  let candidate = `${fallbackSlug}-${projectSuffix}`
+  let attempt = 1
+
+  while (
+    attempt <= MAX_SLUG_ATTEMPTS &&
+    (await prisma.storeListing.findUnique({ where: { slug: candidate } }))
+  ) {
+    candidate = `${fallbackSlug}-${projectSuffix}-${attempt}`
+    attempt += 1
+  }
+
+  if (attempt > MAX_SLUG_ATTEMPTS) {
+    throw new Error('Failed to generate a unique listing slug')
+  }
+
+  return candidate
 }
 
 export async function publishProjectListing(input: {
@@ -16,8 +64,11 @@ export async function publishProjectListing(input: {
   price?: number | null
   pricingModel?: PricingModel
 }) {
+  const existing = await prisma.storeListing.findUnique({
+    where: { projectId: input.projectId },
+  })
   const baseSlug = slugify(input.name)
-  const slug = `${baseSlug || 'holy-app'}-${input.projectId.slice(-6)}`
+  const slug = existing?.slug ?? (await resolveUniqueSlug(baseSlug, input.projectId))
   const pricingModel =
     input.pricingModel ?? (input.price && input.price > 0 ? PricingModel.PAID : PricingModel.FREE)
 

@@ -82,7 +82,7 @@ model Install {
   source      String?
   createdAt   DateTime     @default(now())
 
-  @@unique([userId, listingId, projectId])
+  @@index([userId, listingId, projectId])
 }
 
 model RewardLedger {

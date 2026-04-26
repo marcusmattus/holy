@@ -3,9 +3,16 @@ import { rateLimit } from '@/lib/rate-limit'
 import { enqueueGenerateJob } from '@/server/queues/generate.queue'
 import { generateProjectFiles } from '@/server/services/generate.service'
 
+function getRateLimitKey(req: Request) {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const realIp = req.headers.get('x-real-ip')?.trim()
+  const connectIp = req.headers.get('cf-connecting-ip')?.trim()
+  const candidateIp = connectIp || realIp || forwarded || 'anonymous'
+  return `generate:${candidateIp}`
+}
+
 export async function POST(req: Request) {
-  const key = req.headers.get('x-forwarded-for') ?? 'anonymous'
-  const limit = rateLimit(`generate:${key}`)
+  const limit = rateLimit(getRateLimitKey(req))
   if (!limit.ok) {
     return Response.json(
       { error: 'Too many requests', retryAfterSeconds: limit.retryAfterSeconds },
