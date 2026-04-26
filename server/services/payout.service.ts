@@ -12,10 +12,6 @@ function getSafePayoutErrorMessage(error: unknown) {
     return `Stripe error (${maybeError.type ?? 'unknown'}:${maybeError.code ?? 'unknown'})`
   }
 
-  if (maybeError.message) {
-    return 'Payout transfer failed'
-  }
-
   return 'Payout transfer failed'
 }
 
