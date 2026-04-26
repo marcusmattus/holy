@@ -1,21 +1,24 @@
 "use client"
 
-function escapeClosingScriptTags(code: string) {
-  return code.replace(/<\/script/gi, '<\\/script')
+function escapeClosingTags(value: string) {
+  return value.replace(/<\/script/gi, "<\\/script")
 }
 
 export default function SandboxPreview({ code }: { code: string }) {
-  const safeCode = escapeClosingScriptTags(code)
+  const safeCode = escapeClosingTags(code)
 
   return (
     <iframe
-      title="Holy Sandbox Preview"
-      className="w-full h-full border"
+      title="Holy Studio Preview"
+      className="h-full w-full border border-white/10 bg-white"
       sandbox="allow-scripts allow-forms allow-popups allow-modals"
       referrerPolicy="no-referrer"
       srcDoc={`
+        <!doctype html>
         <html>
           <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
             <script src="https://cdn.tailwindcss.com"></script>
           </head>
           <body>
