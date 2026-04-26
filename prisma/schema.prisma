@@ -8,34 +8,41 @@ datasource db {
 }
 
 model User {
-  id                  String            @id @default(cuid())
-  email               String            @unique
-  projects            Project[]
-  purchases           Purchase[]
-  revenueShareRules   RevenueShareRule[]
-  revenueShares       RevenueShare[]
-  rewardLedgerEntries RewardLedger[]
-  referralsAsReferrer Referral[]        @relation("ReferralReferrer")
-  referralsAsReferred Referral[]        @relation("ReferralReferred")
-  installs            Install[]
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  projects             Project[]
+  payouts              Payout[]
+  creatorPayoutAccount CreatorPayoutAccount?
+  revenueShareRules    RevenueShareRule[]
+  revenueShares        RevenueShare[]        @relation("RevenueShareRecipient")
+  rewardLedgerEntries  RewardLedger[]
+  referralsAsReferrer  Referral[]            @relation("ReferralReferrer")
+  referralsAsReferred  Referral[]            @relation("ReferralReferred")
+  installs             Install[]
+  ownedWorkspaces      Workspace[]           @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
+  purchases            Purchase[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 model Project {
-  id          String           @id @default(cuid())
-  name        String
-  slug        String?          @unique
-  description String?
-  userId      String
-  user        User             @relation(fields: [userId], references: [id])
-  status      ProjectStatus    @default(DRAFT)
-  files       ProjectFile[]
-  versions    ProjectVersion[]
-  listing     StoreListing?
-  deployments Deployment[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id           String                  @id @default(cuid())
+  name         String
+  slug         String?                 @unique
+  description  String?
+  userId       String
+  user         User                    @relation(fields: [userId], references: [id])
+  workspaceId  String?
+  workspace    Workspace?              @relation(fields: [workspaceId], references: [id])
+  status       ProjectStatus           @default(DRAFT)
+  files        ProjectFile[]
+  versions     ProjectVersion[]
+  listing      StoreListing?
+  deployments  Deployment[]
+  analytics    AnalyticsDailyAggregate[]
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
 }
 
 model ProjectFile {
@@ -62,34 +69,194 @@ model ProjectVersion {
 }
 
 model StoreListing {
-  id                String                @id @default(cuid())
-  projectId         String                @unique
-  project           Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id                String                  @id @default(cuid())
+  projectId         String                  @unique
+  project           Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  slug              String                  @unique
   name              String
   title             String
-  slug              String                @unique
   description       String
-  category          String?
-  priceType         StoreListingPriceType @default(FREE)
-  priceCents        Int                   @default(0)
-  currency          String                @default("gbp")
-  status            ListingStatus         @default(DRAFT)
-  isPublished       Boolean               @default(false)
+  category          String                  @default("General")
+  price             Float?
+  priceType         StoreListingPriceType   @default(FREE)
+  priceCents        Int                     @default(0)
+  currency          String                  @default("gbp")
+  status            ListingStatus           @default(DRAFT)
+  isPublished       Boolean                 @default(false)
   installs          Install[]
   purchases         Purchase[]
   revenueShareRules RevenueShareRule[]
   referrals         Referral[]
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  analytics         AnalyticsDailyAggregate[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 }
 
 model Deployment {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  provider   String   @default("simulated")
+  externalId String?
+  url        String?
+  status     String
+  logs       Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model CreatorPayoutAccount {
+  id               String              @id @default(cuid())
+  userId           String              @unique
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeAccountId  String              @unique
+  onboardingStatus PayoutAccountStatus @default(PENDING)
+  payoutsEnabled   Boolean             @default(false)
+  chargesEnabled   Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model Payout {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  amountCents      Int
+  currency         String       @default("gbp")
+  status           PayoutStatus @default(PENDING)
+  stripeTransferId String?      @unique
+  metadata         Json?
+  revenueShares    RevenueShare[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model RevenueShare {
+  id          String             @id @default(cuid())
+  purchaseId  String?
+  purchase    Purchase?          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  listingId   String?
+  recipientId String
+  recipient   User               @relation("RevenueShareRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  role        RevenueShareRole?
+  amountCents Int
+  currency    String             @default("gbp")
+  status      RevenueShareStatus @default(PENDING)
+  payoutId    String?
+  referralCode String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  payout      Payout?            @relation(fields: [payoutId], references: [id])
+}
+
+model RevenueShareRule {
+  id          String           @id @default(cuid())
+  listingId   String
+  listing     StoreListing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  role        RevenueShareRole
+  basisPoints Int
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([listingId, recipientId, role])
+}
+
+model AnalyticsEvent {
+  id           String   @id @default(cuid())
+  eventType    String
+  projectId    String?
+  listingId    String?
+  userId       String?
+  revenueCents Int      @default(0)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+}
+
+model AnalyticsDailyAggregate {
+  id           String       @id @default(cuid())
+  projectId    String?
+  project      Project?     @relation(fields: [projectId], references: [id])
+  listingId    String?
+  listing      StoreListing? @relation(fields: [listingId], references: [id])
+  date         DateTime
+  views        Int          @default(0)
+  installs     Int          @default(0)
+  purchases    Int          @default(0)
+  revenueCents Int          @default(0)
+  referrals    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([projectId, listingId, date])
+}
+
+model Workspace {
+  id        String            @id @default(cuid())
+  name      String
+  slug      String            @unique
+  ownerId   String
+  owner     User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members   WorkspaceMember[]
+  projects  Project[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
+}
+
+model RewardLedger {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceType       RewardSourceType
+  sourceId         String?
+  amount           Int
+  currency         RewardCurrency   @default(POINTS)
+  status           RewardStatus     @default(PENDING)
+  description      String?
+  metadata         Json?
+  settlementProvider String?
+  settlementTxHash String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model AppInstall {
   id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  url       String
-  status    String
+  userId    String
+  listingId String
   createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+}
+
+model AppPurchase {
+  id                String   @id @default(cuid())
+  userId            String
+  listingId         String
+  providerSessionId String
+  createdAt         DateTime @default(now())
+
+  @@unique([providerSessionId])
+}
+
+model StripeWebhookEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique
+  eventType   String
+  processedAt DateTime @default(now())
 }
 
 model Install {
@@ -120,50 +287,6 @@ model Purchase {
   updatedAt           DateTime        @updatedAt
 }
 
-model RevenueShareRule {
-  id          String           @id @default(cuid())
-  listingId   String
-  listing     StoreListing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  recipientId String
-  recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  role        RevenueShareRole
-  basisPoints Int
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@unique([listingId, recipientId, role])
-}
-
-model RevenueShare {
-  id          String             @id @default(cuid())
-  purchaseId  String
-  purchase    Purchase           @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  recipientId String
-  recipient   User               @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  role        RevenueShareRole
-  amountCents Int
-  currency    String             @default("gbp")
-  status      RevenueShareStatus @default(PENDING)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-}
-
-model RewardLedger {
-  id               String         @id @default(cuid())
-  userId           String
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceType       RewardSourceType
-  sourceId         String?
-  amount           Int
-  currency         RewardCurrency @default(POINTS)
-  status           RewardStatus   @default(PENDING)
-  description      String?
-  metadata         Json?
-  settlementTxHash String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-}
-
 model Referral {
   id         String         @id @default(cuid())
   referrerId String
@@ -176,6 +299,22 @@ model Referral {
   status     ReferralStatus @default(PENDING)
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+}
+
+enum PayoutAccountStatus {
+  PENDING
+  ONBOARDING
+  ACTIVE
+  RESTRICTED
+  DISABLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
 }
 
 enum ProjectStatus {
@@ -214,10 +353,17 @@ enum RevenueShareRole {
 }
 
 enum RevenueShareStatus {
-  PENDING
   AVAILABLE
+  PENDING
   PAID_OUT
   CANCELLED
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
 }
 
 enum RewardSourceType {
