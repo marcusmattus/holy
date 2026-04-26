@@ -5,6 +5,7 @@ import {
   AgentType,
   type Prisma,
   PriceType,
+  PurchaseStatus,
 } from '@prisma/client'
 import { prisma } from '@/server/services/prisma'
 
@@ -129,7 +130,7 @@ export async function installAgentListing(input: {
       where: {
         agentListingId: listing.id,
         buyerId: input.userId,
-        status: 'COMPLETED',
+        status: PurchaseStatus.COMPLETED,
       },
       select: { id: true },
     })

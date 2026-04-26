@@ -58,7 +58,11 @@ export async function decideComplianceReview(input: {
   reviewedById?: string
   notes?: string
 }) {
-  if ((input.status === 'REJECTED' || input.status === 'NEEDS_CHANGES') && !input.notes?.trim()) {
+  if (
+    (input.status === ComplianceReviewStatus.REJECTED ||
+      input.status === ComplianceReviewStatus.NEEDS_CHANGES) &&
+    !input.notes?.trim()
+  ) {
     throw new Error('Admin notes are required for rejection or needs-changes decisions')
   }
 
