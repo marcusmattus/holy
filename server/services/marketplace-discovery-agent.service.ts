@@ -13,7 +13,7 @@ export async function askMarketplaceDiscovery(input: MarketplaceAskInput) {
   const results = await provider.search({
     tenantId: input.tenantId,
     queryText: input.question,
-    queryEmbedding: toEmbedding(input.question),
+    queryEmbedding: fakeEmbedding(input.question),
     topK: 5,
   })
 
@@ -41,7 +41,7 @@ export async function askMarketplaceDiscovery(input: MarketplaceAskInput) {
   }
 }
 
-function toEmbedding(input: string): number[] {
+function fakeEmbedding(input: string): number[] {
   return input
     .slice(0, 32)
     .split('')

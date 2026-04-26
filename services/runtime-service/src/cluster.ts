@@ -37,10 +37,21 @@ export async function runRuntimeCluster(config: RuntimeClusterConfig) {
       const chunks: Buffer[] = []
       request.on('data', (chunk) => chunks.push(chunk))
       request.on('end', async () => {
-        const body = JSON.parse(Buffer.concat(chunks).toString() || '{}') as {
+        let body: {
           workspaceId: string
           tenantId: string
           payload?: Record<string, unknown>
+        }
+        try {
+          body = JSON.parse(Buffer.concat(chunks).toString() || '{}') as {
+            workspaceId: string
+            tenantId: string
+            payload?: Record<string, unknown>
+          }
+        } catch {
+          response.writeHead(400, { 'Content-Type': 'application/json' })
+          response.end(JSON.stringify({ error: 'Invalid JSON in request body' }))
+          return
         }
 
         const policy: RuntimeExecutionPolicy = {

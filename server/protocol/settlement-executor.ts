@@ -11,7 +11,7 @@ export async function executeSettlementBatch(input: {
   amountCents: number
   approved: boolean
   creatorOptIn: boolean
-  dryRun?: boolean
+  dryRun: boolean
 }) {
   if (isSettlementEmergencyStopped()) {
     throw new Error('Settlement emergency stop is active')
@@ -23,7 +23,7 @@ export async function executeSettlementBatch(input: {
     return { batchId: input.batchId, status: 'already-processed', txHash: null }
   }
 
-  if (input.dryRun ?? true) {
+  if (input.dryRun) {
     dryRunApprovedBatches.add(input.batchId)
     return { batchId: input.batchId, status: 'dry-run-ok', txHash: null }
   }

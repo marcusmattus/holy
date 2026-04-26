@@ -21,8 +21,8 @@ export async function upsertRuntimeHeartbeat(input: {
   metadata?: Record<string, unknown>
   token: string
 }) {
-  if (process.env.NODE_ENV === 'production' && HEARTBEAT_SECRET === 'dev-heartbeat-secret') {
-    throw new Error('RUNTIME_HEARTBEAT_SECRET must be configured in production')
+  if (process.env.NODE_ENV !== 'test' && HEARTBEAT_SECRET === 'dev-heartbeat-secret') {
+    throw new Error('RUNTIME_HEARTBEAT_SECRET must be configured')
   }
 
   if (input.token !== HEARTBEAT_SECRET) {

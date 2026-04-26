@@ -20,17 +20,29 @@ export async function executeRuntimeJob(
     jobId: scopedContext.jobId,
   })
   let timeoutHandle: NodeJS.Timeout | undefined
+  let settled = false
 
   try {
-    const result = await Promise.race([
-      executor(scopedContext),
-      new Promise((_, reject) => {
-        timeoutHandle = setTimeout(
-          () => reject(new Error('Execution timeout exceeded')),
-          policy.timeoutMs,
-        )
-      }),
-    ])
+    const timedExecution = new Promise<unknown>((resolve, reject) => {
+      void executor(scopedContext)
+        .then((value) => {
+          settled = true
+          resolve(value)
+        })
+        .catch((error) => {
+          settled = true
+          reject(error)
+        })
+
+      timeoutHandle = setTimeout(() => {
+        if (!settled) {
+          settled = true
+          reject(new Error('Execution timeout exceeded'))
+        }
+      }, policy.timeoutMs)
+    })
+
+    const result = await timedExecution
 
     emitMetric({
       name: 'runtime_execution_duration_ms',

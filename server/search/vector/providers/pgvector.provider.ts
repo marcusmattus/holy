@@ -21,7 +21,9 @@ export class PgvectorProvider implements VectorProvider {
         id: record.id,
         text: record.text,
         metadata: record.metadata,
-        score: keywordOverlap(query.queryText, record.text) + cosineSimilarity(query.queryEmbedding, record.embedding),
+        score:
+          0.5 * keywordOverlap(query.queryText, record.text) +
+          0.5 * normalizedCosineSimilarity(query.queryEmbedding, record.embedding),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, query.topK ?? 10)
@@ -59,4 +61,8 @@ function cosineSimilarity(a: number[], b: number[]) {
 
   if (!normA || !normB) return 0
   return dot / (Math.sqrt(normA) * Math.sqrt(normB))
+}
+
+function normalizedCosineSimilarity(a: number[], b: number[]) {
+  return (cosineSimilarity(a, b) + 1) / 2
 }
