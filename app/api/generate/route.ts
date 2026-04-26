@@ -25,18 +25,19 @@ Format exactly like this (no markdown fences, just raw JSON):
   "/components/Button.tsx": "code here"
 }
 
+In /App.tsx include major sections with data-holy-id attributes, especially data-holy-id="hero" and data-holy-id="pricing".
+
 Idea: ${prompt}`,
   })
 
   let files: Record<string, string>
   try {
-    // Strip markdown code fences if the model included them
     const cleaned = text.replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim()
     files = JSON.parse(cleaned)
   } catch (err) {
     console.error('Failed to parse AI-generated files JSON:', err)
     files = {
-      '/App.tsx': `export default function App() {\n  return <div>${prompt}</div>\n}`,
+      '/App.tsx': `export default function App() {\n  return (\n    <main className="p-10">\n      <section data-holy-id="hero">${prompt}</section>\n      <section data-holy-id="pricing">Pricing section</section>\n    </main>\n  )\n}`,
     }
   }
 
