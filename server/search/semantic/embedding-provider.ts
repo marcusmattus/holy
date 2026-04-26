@@ -5,6 +5,14 @@ export interface EmbeddingProvider {
 export class DeterministicEmbeddingProvider implements EmbeddingProvider {
   async createEmbedding(input: string) {
     const normalized = input.trim().toLowerCase()
-    return Array.from({ length: 8 }, (_, index) => (normalized.charCodeAt(index) ?? 0) / 255)
+    const vectorLength = 16
+    const values = Array.from({ length: vectorLength }, () => 0)
+
+    for (let index = 0; index < normalized.length; index++) {
+      const slot = index % vectorLength
+      values[slot] = (values[slot] + normalized.charCodeAt(index) * (slot + 1)) % 1024
+    }
+
+    return values.map((value) => value / 1024)
   }
 }

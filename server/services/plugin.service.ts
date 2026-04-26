@@ -33,6 +33,7 @@ const pluginListings: PluginListingRecord[] = [
     },
   },
 ]
+const pluginInstallRegistry = new Set<string>()
 
 export function listPlugins() {
   return pluginListings.filter((plugin) => plugin.status === 'PUBLISHED')
@@ -47,6 +48,12 @@ export function installPlugin(pluginId: string, projectId: string, installedById
   if (!plugin) {
     return { success: false, error: 'Plugin not found' }
   }
+
+  const installKey = `${pluginId}:${projectId}`
+  if (pluginInstallRegistry.has(installKey)) {
+    return { success: false, error: 'Plugin already installed for project' }
+  }
+  pluginInstallRegistry.add(installKey)
 
   return {
     success: true,

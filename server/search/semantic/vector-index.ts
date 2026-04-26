@@ -22,17 +22,21 @@ export function searchVectorIndex(queryEmbedding: number[], limit = 10) {
 }
 
 function cosineSimilarity(a: number[], b: number[]) {
-  if (!a.length || !b.length) {
+  // Mismatched embeddings are treated as non-comparable and return zero similarity.
+  if (!a.length || !b.length || a.length !== b.length) {
     return 0
   }
-  const length = Math.min(a.length, b.length)
   let dot = 0
   let normA = 0
   let normB = 0
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i]
     normA += a[i] * a[i]
     normB += b[i] * b[i]
   }
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB) || 1)
+  const denominator = Math.sqrt(normA) * Math.sqrt(normB)
+  if (!denominator) {
+    return 0
+  }
+  return dot / denominator
 }

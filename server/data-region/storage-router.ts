@@ -7,9 +7,10 @@ export interface StorageRoutingDecision {
 }
 
 export function routeStorage(region: DataRegion): StorageRoutingDecision {
+  const exportAllowedRegions: DataRegion[] = ['US', 'EU']
   return {
     bucketRef: `storage-${region.toLowerCase()}`,
     region,
-    exportAllowed: true,
+    exportAllowed: exportAllowedRegions.includes(region),
   }
 }

@@ -20,6 +20,25 @@ export interface RuntimeExecutionRequest {
 }
 
 const executionStore = new Map<string, RuntimeExecution>()
+type RuntimeExecutionStore = {
+  get(executionId: string): RuntimeExecution | null
+  set(execution: RuntimeExecution): void
+}
+
+let externalExecutionStore: RuntimeExecutionStore | null = null
+
+export function configureRuntimeExecutionStore(store: RuntimeExecutionStore) {
+  externalExecutionStore = store
+}
+
+function getExecutionFromStore(executionId: string) {
+  return externalExecutionStore?.get(executionId) ?? executionStore.get(executionId) ?? null
+}
+
+function setExecutionInStore(execution: RuntimeExecution) {
+  executionStore.set(execution.id, execution)
+  externalExecutionStore?.set(execution)
+}
 
 export async function executeRuntimeJob(request: RuntimeExecutionRequest): Promise<RuntimeExecution> {
   const id = crypto.randomUUID()
@@ -30,7 +49,7 @@ export async function executeRuntimeJob(request: RuntimeExecutionRequest): Promi
     updatedAt: new Date().toISOString(),
     logs: [],
   }
-  executionStore.set(id, execution)
+  setExecutionInStore(execution)
 
   try {
     const policy = validateRuntimePolicy(request.policy ?? DEFAULT_RUNTIME_POLICY)
@@ -47,22 +66,25 @@ export async function executeRuntimeJob(request: RuntimeExecutionRequest): Promi
     execution.updatedAt = new Date().toISOString()
   }
 
-  executionStore.set(id, execution)
+  setExecutionInStore(execution)
   return execution
 }
 
 export function getRuntimeExecution(executionId: string): RuntimeExecution | null {
-  return executionStore.get(executionId) ?? null
+  return getExecutionFromStore(executionId)
 }
 
 export function cancelRuntimeExecution(executionId: string): RuntimeExecution | null {
-  const execution = executionStore.get(executionId)
-  if (!execution || execution.status === 'completed' || execution.status === 'failed') {
-    return execution ?? null
+  const execution = getExecutionFromStore(executionId)
+  if (!execution) {
+    return null
+  }
+  if (execution.status === 'completed' || execution.status === 'failed') {
+    return null
   }
 
   execution.status = 'cancelled'
   execution.updatedAt = new Date().toISOString()
-  executionStore.set(executionId, execution)
+  setExecutionInStore(execution)
   return execution
 }

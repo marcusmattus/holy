@@ -19,9 +19,14 @@ export function handleRuntimeExecutionGet(id: string) {
 }
 
 export function handleRuntimeExecutionCancel(id: string) {
+  const existing = getRuntimeExecution(id)
+  if (!existing) {
+    return { status: 404, body: { error: 'execution not found' } }
+  }
+
   const execution = cancelRuntimeExecution(id)
   if (!execution) {
-    return { status: 404, body: { error: 'execution not found' } }
+    return { status: 409, body: { error: 'execution can no longer be cancelled' } }
   }
 
   return { status: 200, body: execution }

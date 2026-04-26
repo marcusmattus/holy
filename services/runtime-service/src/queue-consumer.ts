@@ -5,10 +5,26 @@ export interface RuntimeQueueJob {
   code: string
 }
 
-export async function consumeRuntimeQueue(jobs: RuntimeQueueJob[]) {
+export interface RuntimeQueueConsumerOptions {
+  concurrency?: number
+}
+
+const DEFAULT_QUEUE_CONCURRENCY = Number(process.env.RUNTIME_QUEUE_CONCURRENCY ?? 3)
+
+export async function consumeRuntimeQueue(
+  jobs: RuntimeQueueJob[],
+  options: RuntimeQueueConsumerOptions = {},
+) {
   const results = []
-  for (const job of jobs) {
-    results.push(await executeRuntimeJob({ code: job.code }))
+  const concurrency = Math.max(1, options.concurrency ?? DEFAULT_QUEUE_CONCURRENCY)
+
+  for (let index = 0; index < jobs.length; index += concurrency) {
+    const batch = jobs.slice(index, index + concurrency)
+    const batchResults = await Promise.all(
+      batch.map((job) => executeRuntimeJob({ code: job.code })),
+    )
+    results.push(...batchResults)
   }
+
   return results
 }

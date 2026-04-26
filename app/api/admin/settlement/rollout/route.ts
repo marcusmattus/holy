@@ -2,7 +2,10 @@ import { emergencyDisableSettlement, getSettlementRolloutPolicy } from '@/server
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
-  const workspaceId = searchParams.get('workspaceId') ?? 'workspace-demo'
+  const workspaceId = searchParams.get('workspaceId')
+  if (!workspaceId) {
+    return Response.json({ error: 'workspaceId is required' }, { status: 400 })
+  }
   return Response.json({ policy: getSettlementRolloutPolicy(workspaceId) })
 }
 
