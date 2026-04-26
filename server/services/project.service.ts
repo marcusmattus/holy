@@ -1,18 +1,17 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/server/db/client'
 
 export async function createProject(userId: string, name: string) {
   return prisma.project.create({
     data: {
       userId,
-      name
-    }
+      name,
+    },
   })
 }
 
 export async function getProjects(userId: string) {
   return prisma.project.findMany({
-    where: { userId }
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
   })
 }

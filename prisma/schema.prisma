@@ -8,47 +8,309 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                            String                 @id @default(cuid())
+  email                         String                 @unique
+  projects                      Project[]
+  studioSessions                StudioSession[]
+  studioComments                StudioComment[]
+  fileLocks                     FileLock[]
+  templates                     Template[]
+  templateForks                 TemplateFork[]
+  creatorProfile                CreatorProfile?
+  creatorFollowsReceived        CreatorFollow[]        @relation("CreatorFollowCreator")
+  creatorFollowsGiven           CreatorFollow[]        @relation("CreatorFollowFollower")
+  creatorSubscriptionsReceived  CreatorSubscription[]  @relation("CreatorSubscriptionCreator")
+  creatorSubscriptionsGiven     CreatorSubscription[]  @relation("CreatorSubscriptionSubscriber")
+  ownedWorkspaces               Workspace[]            @relation("WorkspaceOwner")
+  workspaceMemberships          WorkspaceMember[]
+  usageEvents                   UsageEvent[]
+  createdAt                     DateTime               @default(now())
+}
+
+model Workspace {
+  id             String                  @id @default(cuid())
+  name           String
+  ownerId        String
+  owner          User                    @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members        WorkspaceMember[]
+  projects       Project[]
+  billingAccount WorkspaceBillingAccount?
+  usageEvents    UsageEvent[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id            String           @id @default(cuid())
+  name          String
+  description   String?
+  status        String           @default("DRAFT")
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId   String?
+  workspace     Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  versions      ProjectVersion[]
+  files         ProjectFile[]
+  listings      StoreListing[]
+  deployments   Deployment[]
+  sessions      StudioSession[]
+  comments      StudioComment[]
+  fileLocks     FileLock[]
+  sourceFor     Template[]       @relation("TemplateSourceProject")
+  templateForks TemplateFork[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  path      String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, path])
 }
 
 model ProjectVersion {
   id        String   @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   code      String
   createdAt DateTime @default(now())
 }
 
 model StoreListing {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String
-  description String
-  price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name         String
+  description  String
+  price        Float?
+  isPublished  Boolean  @default(false)
+  views        Int      @default(0)
+  installs     Int      @default(0)
+  purchases    Int      @default(0)
+  revenueCents Int      @default(0)
+  createdAt    DateTime @default(now())
 }
 
 model Deployment {
   id        String   @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model StudioSession {
+  id         String        @id @default(cuid())
+  projectId  String
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     SessionStatus @default(ACTIVE)
+  lastSeenAt DateTime      @default(now())
+  metadata   Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([projectId, userId])
+}
+
+model StudioComment {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filePath    String?
+  componentId String?
+  versionId   String?
+  body        String
+  status      CommentStatus @default(OPEN)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model FileLock {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filePath  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, filePath])
+}
+
+model Template {
+  id              String         @id @default(cuid())
+  sourceProjectId String?
+  sourceProject   Project?       @relation("TemplateSourceProject", fields: [sourceProjectId], references: [id], onDelete: SetNull)
+  creatorId       String
+  creator         User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title           String
+  slug            String         @unique
+  description     String
+  category        String?
+  filesJson       Json
+  previewImage    String?
+  priceType       PriceType      @default(FREE)
+  priceCents      Int            @default(0)
+  status          TemplateStatus @default(DRAFT)
+  forks           TemplateFork[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model TemplateFork {
+  id         String   @id @default(cuid())
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model CreatorProfile {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handle     String   @unique
+  bio        String?
+  avatarUrl  String?
+  websiteUrl String?
+  isPublic   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model CreatorFollow {
+  id         String   @id @default(cuid())
+  creatorId  String
+  creator    User     @relation("CreatorFollowCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  followerId String
+  follower   User     @relation("CreatorFollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([creatorId, followerId])
+}
+
+model CreatorSubscription {
+  id                   String                    @id @default(cuid())
+  creatorId            String
+  creator              User                      @relation("CreatorSubscriptionCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  subscriberId         String
+  subscriber           User                      @relation("CreatorSubscriptionSubscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String?                   @unique
+  status               CreatorSubscriptionStatus @default(ACTIVE)
+  priceCents           Int
+  currency             String                    @default("gbp")
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  @@unique([creatorId, subscriberId])
+}
+
+model WorkspaceBillingAccount {
+  id                   String        @id @default(cuid())
+  workspaceId          String        @unique
+  workspace            Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?       @unique
+  stripeSubscriptionId String?       @unique
+  plan                 WorkspacePlan @default(FREE)
+  status               BillingStatus @default(ACTIVE)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+}
+
+model UsageEvent {
+  id          String         @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type        UsageEventType
+  quantity    Int            @default(1)
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+}
+
+enum SessionStatus {
+  ACTIVE
+  IDLE
+  OFFLINE
+}
+
+enum CommentStatus {
+  OPEN
+  RESOLVED
+}
+
+enum PriceType {
+  FREE
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  ARCHIVED
+}
+
+enum CreatorSubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum WorkspacePlan {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+enum BillingStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+enum UsageEventType {
+  AI_GENERATION
+  AI_PATCH
+  DEPLOYMENT
+  COLLABORATOR_SEAT
+  TEMPLATE_FORK
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
