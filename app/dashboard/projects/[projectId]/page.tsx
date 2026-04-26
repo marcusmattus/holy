@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import CreateTemplateModal from '@/features/templates/components/CreateTemplateModal'
 
 export default function ProjectPage({
   params,
@@ -26,6 +27,7 @@ export default function ProjectPage({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{name}</h1>
         <div className="flex gap-2">
+          <CreateTemplateModal projectId={projectId} />
           <Link
             href={`/dashboard/projects/${projectId}/analytics`}
             className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
