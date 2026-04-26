@@ -14,7 +14,7 @@ export function RewardSummaryCard({ userId }: { userId: string }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-white">
       <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A24A]">
-        Holystic Rewards
+        Holistic Rewards
       </p>
       <h3 className="mt-3 text-3xl font-bold tracking-tight">Reward Balance</h3>
       <div className="mt-6 space-y-3">

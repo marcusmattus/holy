@@ -65,14 +65,32 @@ export async function allocateRevenueShares(input: { purchaseId: string }) {
     throw new Error('Revenue share rules exceed 100%')
   }
 
+  const allocations = rules.map((rule) => ({
+    rule,
+    amountCents: Math.floor((purchase.amountCents * rule.basisPoints) / 10000),
+  }))
+  const allocatedTotal = allocations.reduce(
+    (sum, allocation) => sum + allocation.amountCents,
+    0
+  )
+  const remainder = purchase.amountCents - allocatedTotal
+
+  if (remainder > 0 && allocations.length > 0) {
+    const creatorIndex = allocations.findIndex(
+      (allocation) => allocation.rule.role === 'CREATOR'
+    )
+    const targetIndex = creatorIndex >= 0 ? creatorIndex : 0
+    allocations[targetIndex].amountCents += remainder
+  }
+
   return prisma.$transaction(
-    rules.map((rule) =>
+    allocations.map((allocation) =>
       prisma.revenueShare.create({
         data: {
           purchaseId: purchase.id,
-          recipientId: rule.recipientId,
-          role: rule.role,
-          amountCents: Math.floor((purchase.amountCents * rule.basisPoints) / 10000),
+          recipientId: allocation.rule.recipientId,
+          role: allocation.rule.role,
+          amountCents: allocation.amountCents,
           currency: purchase.currency,
           status: 'AVAILABLE',
         },
