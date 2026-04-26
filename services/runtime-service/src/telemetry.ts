@@ -29,6 +29,5 @@ export function structuredLog(event: string, fields: Record<string, unknown>) {
     event,
     ...fields,
   }
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify(payload))
 }

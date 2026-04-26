@@ -1,4 +1,4 @@
-import { AutonomyRiskLevel, AutonomyRunStatus } from '@prisma/client'
+import { AutonomyRiskLevel, AutonomyRunStatus, Prisma } from '@prisma/client'
 import { prisma } from '@/server/db'
 import { runAutonomousAction } from '@/server/autonomy/autonomous-runner'
 
@@ -23,7 +23,7 @@ export async function createAutonomyRun(input: {
         outcome.status === 'executed'
           ? AutonomyRunStatus.EXECUTED
           : AutonomyRunStatus.PROPOSED,
-      details: outcome,
+      details: outcome as Prisma.InputJsonValue,
     },
   })
 
@@ -33,7 +33,7 @@ export async function createAutonomyRun(input: {
       actorType: 'autonomy',
       action: 'autonomy.run',
       resourceId: run.id,
-      metadata: outcome,
+      metadata: outcome as Prisma.InputJsonValue,
     },
   })
 

@@ -1,4 +1,9 @@
-import { RuntimeNodeStatus, type DataRegion, type RuntimeProvider } from '@prisma/client'
+import {
+  Prisma,
+  RuntimeNodeStatus,
+  type DataRegion,
+  type RuntimeProvider,
+} from '@prisma/client'
 import { prisma } from '@/server/db'
 
 const HEARTBEAT_SECRET = process.env.RUNTIME_HEARTBEAT_SECRET ?? 'dev-heartbeat-secret'
@@ -27,7 +32,7 @@ export async function upsertRuntimeHeartbeat(input: {
       region: input.region,
       capacity: input.capacity ?? 1,
       activeJobs: input.activeJobs ?? 0,
-      metadata: input.metadata,
+      metadata: input.metadata as Prisma.InputJsonValue | undefined,
       status: RuntimeNodeStatus.HEALTHY,
       lastHeartbeatAt: new Date(),
     },
@@ -37,7 +42,7 @@ export async function upsertRuntimeHeartbeat(input: {
       endpoint: input.endpoint,
       capacity: input.capacity ?? 1,
       activeJobs: input.activeJobs ?? 0,
-      metadata: input.metadata,
+      metadata: input.metadata as Prisma.InputJsonValue | undefined,
       status: RuntimeNodeStatus.HEALTHY,
       lastHeartbeatAt: new Date(),
     },
