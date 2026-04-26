@@ -1,12 +1,39 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Registration failed')
+        return
+      }
+      router.push('/dashboard')
+    } catch {
+      setError('Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="w-full max-w-sm space-y-6 px-4">
@@ -23,7 +50,10 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-xl border border-border bg-card p-6 space-y-4"
+      >
         <div className="space-y-2">
           <label className="text-sm font-medium">Name</label>
           <input
@@ -41,6 +71,7 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            required
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#7C3AED]/50"
           />
         </div>
@@ -54,10 +85,15 @@ export default function RegisterPage() {
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#7C3AED]/50"
           />
         </div>
-        <button className="w-full rounded-lg bg-[#7C3AED] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6D28D9] transition-colors">
-          Create account
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-[#7C3AED] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6D28D9] transition-colors disabled:opacity-60"
+        >
+          {loading ? 'Creating account…' : 'Create account'}
         </button>
-      </div>
+      </form>
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
