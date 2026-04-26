@@ -42,14 +42,20 @@ export async function POST(req: Request) {
   }
 
   const provider = getSettlementProvider(body.provider)
-  const result = await provider.submit(
-    {
-      amount: body.amount,
-      currency: body.currency,
-      recipient: body.recipient,
-    },
-    mode,
-  )
+  let result
+  try {
+    result = await provider.submit(
+      {
+        amount: body.amount,
+        currency: body.currency,
+        recipient: body.recipient,
+      },
+      mode,
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Settlement failed'
+    return NextResponse.json({ error: message }, { status: 501 })
+  }
 
   const submission = await prisma.settlementSubmission.create({
     data: {
@@ -66,16 +72,6 @@ export async function POST(req: Request) {
   })
 
   if (result.txHash) {
-    await prisma.rewardLedger.create({
-      data: {
-        userId: getUserId(req),
-        amount: body.amount,
-        currency: body.currency,
-        txHash: result.txHash,
-        metadata: { submissionId: submission.id },
-      },
-    })
-
     await prisma.payout.create({
       data: {
         userId: getUserId(req),

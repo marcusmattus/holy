@@ -1,8 +1,9 @@
 import { ApiKeyStatus } from '@prisma/client'
-import { createHash, randomBytes, timingSafeEqual } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import { prisma } from '@/server/db'
 
 const rateWindowMs = 60_000
+const maxRequestsPerWindow = 120
 const rateLimitByKey = new Map<string, { count: number; resetAt: number }>()
 
 export type AuthenticatedApiKey = {
@@ -46,7 +47,7 @@ export async function authenticateApiKey(
     rateLimitByKey.set(apiKey.id, { count: 1, resetAt: now + rateWindowMs })
   } else {
     rateState.count += 1
-    if (rateState.count > 120) {
+    if (rateState.count > maxRequestsPerWindow) {
       throw new Error('RATE_LIMIT_EXCEEDED')
     }
   }
@@ -69,11 +70,4 @@ export async function authenticateApiKey(
     scopes: apiKey.scopes,
     keyId: apiKey.id,
   }
-}
-
-export function safeCompare(a: string, b: string) {
-  const bufferA = Buffer.from(a)
-  const bufferB = Buffer.from(b)
-  if (bufferA.length !== bufferB.length) return false
-  return timingSafeEqual(bufferA, bufferB)
 }

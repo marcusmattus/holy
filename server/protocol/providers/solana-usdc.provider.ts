@@ -27,11 +27,8 @@ export class SolanaUsdcProvider implements SettlementProvider {
         txHash: `sim_${Date.now()}`,
       }
     }
-    return {
-      provider: this.id,
-      mode,
-      submitted: true,
-      txHash: `0x${Buffer.from(JSON.stringify(input)).toString('hex').slice(0, 32)}`,
-    }
+    throw new Error(
+      `LIVE settlement is not implemented for ${this.id}. Use SIMULATED mode.`,
+    )
   }
 }

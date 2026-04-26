@@ -5,6 +5,8 @@ import { prisma } from '@/server/db'
 import { requireWorkspaceRole } from '@/server/security/permissions'
 import { writeAuditLog } from '@/server/security/audit-log'
 
+const INVITE_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000
+
 function getUserId(req: Request) {
   return req.headers.get('x-user-id') ?? 'demo-user'
 }
@@ -44,7 +46,7 @@ export async function POST(
       role: body.role ?? WorkspaceRole.MEMBER,
       tokenHash: createHash('sha256').update(token).digest('hex'),
       createdById: userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + INVITE_EXPIRATION_MS),
     },
   })
 
@@ -58,7 +60,13 @@ export async function POST(
   })
 
   return NextResponse.json(
-    { invite: { ...invite, inviteToken: token } },
+    {
+      invite,
+      delivery: {
+        status: 'pending',
+        message: 'Invite token should be delivered through a secure channel.',
+      },
+    },
     { status: 201 },
   )
 }

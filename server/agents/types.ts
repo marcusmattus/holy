@@ -21,3 +21,12 @@ export const SUPPORTED_AGENT_TYPES: AgentType[] = [
   'ANALYTICS_AGENT',
   'DEPLOYMENT_AGENT',
 ]
+
+export const ALLOWED_LISTING_UPDATE_FIELDS = [
+  'name',
+  'description',
+  'price',
+  'category',
+  'tags',
+  'visibility',
+] as const

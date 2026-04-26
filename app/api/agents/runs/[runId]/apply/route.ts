@@ -5,8 +5,10 @@ import { incrementMetric } from '@/server/observability/metrics'
 import { trackAnalyticsEvent } from '@/server/observability/events'
 import { requireWorkspaceRole } from '@/server/security/permissions'
 import { writeAuditLog } from '@/server/security/audit-log'
+import { ALLOWED_LISTING_UPDATE_FIELDS } from '@/server/agents/types'
 
-const allowedListingFields = ['name', 'description', 'price', 'category', 'tags', 'visibility']
+const MAX_TAG_LENGTH = 32
+const MAX_TAG_COUNT = 20
 
 type ProposalAction =
   | { type: 'PATCH_FILES'; files: Record<string, string>; summary: string }
@@ -24,6 +26,49 @@ type AgentProposal = {
 
 function getUserId(req: Request) {
   return req.headers.get('x-user-id') ?? 'demo-user'
+}
+
+function sanitizeText(value: unknown, maxLength: number) {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().slice(0, maxLength)
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function sanitizeListingUpdate(fields: Record<string, unknown>) {
+  const updateData: Record<string, string | number | string[]> = {}
+
+  const name = sanitizeText(fields.name, 120)
+  if (name) updateData.name = name
+
+  const description = sanitizeText(fields.description, 4000)
+  if (description) updateData.description = description
+
+  const category = sanitizeText(fields.category, 80)
+  if (category) updateData.category = category
+
+  const visibility = sanitizeText(fields.visibility, 32)
+  if (visibility) updateData.visibility = visibility
+
+  if (isValidPrice(fields.price)) {
+    updateData.price = fields.price
+  }
+
+  if (Array.isArray(fields.tags)) {
+    const tags = fields.tags
+      .filter((tag): tag is string => typeof tag === 'string')
+      .map((tag) => tag.trim().slice(0, MAX_TAG_LENGTH))
+      .filter((tag) => tag.length > 0)
+      .slice(0, MAX_TAG_COUNT)
+    if (tags.length > 0) {
+      updateData.tags = tags
+    }
+  }
+
+  return updateData
+}
+
+function isValidPrice(value: unknown): value is number {
+  return typeof value === 'number' && value >= 0 && Number.isFinite(value)
 }
 
 export async function POST(
@@ -81,11 +126,17 @@ export async function POST(
     }
 
     if (action.type === 'UPDATE_LISTING' && run.listingId) {
-      const fields = Object.fromEntries(
+      const rawFields = Object.fromEntries(
         Object.entries(action.fields).filter(([key]) =>
-          allowedListingFields.includes(key),
+          ALLOWED_LISTING_UPDATE_FIELDS.includes(
+            key as (typeof ALLOWED_LISTING_UPDATE_FIELDS)[number],
+          ),
         ),
       )
+      const fields = sanitizeListingUpdate(rawFields)
+      if (Object.keys(fields).length === 0) {
+        continue
+      }
       await prisma.storeListing.update({
         where: { id: run.listingId },
         data: fields,

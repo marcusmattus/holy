@@ -17,5 +17,8 @@ export function getSettlementProvider(providerId: string) {
 export function getSettlementMode(): SettlementMode {
   const mode = process.env.SETTLEMENT_MODE ?? 'DISABLED'
   if (mode === 'LIVE' || mode === 'SIMULATED') return mode
+  if (mode !== 'DISABLED') {
+    console.warn(`Invalid SETTLEMENT_MODE "${mode}", defaulting to DISABLED`)
+  }
   return 'DISABLED'
 }
