@@ -7,12 +7,16 @@ export class WebhookExportProvider implements ExportProvider {
       throw new Error('Webhook destination requires a valid url')
     }
 
-    await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
       },
       body: JSON.stringify(payload),
     })
+
+    if (!response.ok) {
+      throw new Error(`Webhook export failed with status ${response.status}`)
+    }
   }
 }

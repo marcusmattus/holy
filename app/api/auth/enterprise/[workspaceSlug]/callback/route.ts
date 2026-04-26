@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { completeEnterpriseLogin } from '@/server/services/enterprise-auth.service'
 
 export async function GET(
@@ -14,11 +15,8 @@ export async function GET(
     return NextResponse.json({ error: 'Missing OIDC state or code' }, { status: 400 })
   }
 
-  const stateToken = request.headers.get('cookie')
-    ?.split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith('holy-oidc-state='))
-    ?.split('=')[1]
+  const cookieStore = await cookies()
+  const stateToken = cookieStore.get('holy-oidc-state')?.value
 
   if (!stateToken) {
     return NextResponse.json({ error: 'OIDC session state missing' }, { status: 400 })

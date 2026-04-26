@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { prisma } from '@/server/db'
 
+const UINT32_BUCKET_SIZE = 0x100000000
+
 export async function assignExperimentVariant(input: {
   experimentId: string
   sessionId: string
@@ -12,6 +14,10 @@ export async function assignExperimentVariant(input: {
 
   const variants = (experiment.variants as Array<{ key: string; weight: number }>) ?? []
   if (variants.length === 0) throw new Error('Experiment has no variants configured')
+  const totalWeight = variants.reduce((sum, variant) => sum + variant.weight, 0)
+  if (Math.abs(totalWeight - 1) > 0.000001) {
+    throw new Error('Experiment variant weights must sum to 1.0')
+  }
 
   const existing = await prisma.experimentExposure.findUnique({
     where: {
@@ -27,7 +33,7 @@ export async function assignExperimentVariant(input: {
   }
 
   const hash = createHash('sha256').update(`${input.experimentId}:${input.sessionId}`).digest('hex')
-  const bucket = Number.parseInt(hash.slice(0, 8), 16) / 0xffffffff
+  const bucket = Number.parseInt(hash.slice(0, 8), 16) / UINT32_BUCKET_SIZE
 
   let cumulative = 0
   let assigned = variants[0].key

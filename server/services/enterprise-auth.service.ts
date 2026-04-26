@@ -7,6 +7,13 @@ import {
 } from '@/server/auth/oidc.client'
 
 const OIDC_STATE_SECRET = process.env.OIDC_STATE_SECRET ?? 'dev-oidc-state-secret'
+function getOidcStateSecret() {
+  if (process.env.NODE_ENV === 'production' && !process.env.OIDC_STATE_SECRET) {
+    throw new Error('OIDC_STATE_SECRET must be configured in production')
+  }
+
+  return new TextEncoder().encode(OIDC_STATE_SECRET)
+}
 
 function getCallbackUrl(workspaceSlug: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -35,7 +42,7 @@ export async function getEnterpriseLoginUrl(workspaceSlug: string) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('10m')
-    .sign(new TextEncoder().encode(OIDC_STATE_SECRET))
+    .sign(getOidcStateSecret())
 
   const oidc = await discoverOidcConfiguration(connection.issuerUrl)
 
@@ -72,7 +79,7 @@ export async function completeEnterpriseLogin(input: {
 
   const verified = await jwtVerify(
     input.stateToken,
-    new TextEncoder().encode(OIDC_STATE_SECRET),
+    getOidcStateSecret(),
   )
 
   const payload = verified.payload as {

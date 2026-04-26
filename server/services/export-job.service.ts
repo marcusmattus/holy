@@ -3,12 +3,13 @@ import { Prisma } from '@prisma/client'
 import { WebhookExportProvider } from '@/server/export/providers/webhook.provider'
 import { S3ExportProvider } from '@/server/export/providers/s3.provider'
 import { BigQueryExportProvider } from '@/server/export/providers/bigquery.provider'
+import { SnowflakeExportProvider } from '@/server/export/providers/snowflake.provider'
 
 const providers: Record<'WEBHOOK' | 'S3' | 'BIGQUERY' | 'SNOWFLAKE', { run: (payload: { workspaceId: string; data: Record<string, unknown> }, config: Record<string, unknown>) => Promise<void> }> = {
   WEBHOOK: new WebhookExportProvider(),
   S3: new S3ExportProvider(),
   BIGQUERY: new BigQueryExportProvider(),
-  SNOWFLAKE: new BigQueryExportProvider(),
+  SNOWFLAKE: new SnowflakeExportProvider(),
 }
 
 export async function createExportDestination(input: {

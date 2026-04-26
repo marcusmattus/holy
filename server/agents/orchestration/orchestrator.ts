@@ -17,6 +17,9 @@ export class Orchestrator {
     const outputs: Array<Record<string, unknown>> = []
     let highestRisk: SuggestionImpact = 'LOW'
 
+    const projectId =
+      typeof input.payload?.projectId === 'string' ? input.payload.projectId : undefined
+
     for (const node of input.graph.nodes) {
       const routed = routeAgentRequest({
         agentId: node.agentId,
@@ -35,7 +38,7 @@ export class Orchestrator {
         highestRisk = 'MEDIUM'
       }
 
-      this.memory.set(input.workspaceId, `agent:${node.agentId}:last`, routed.output)
+      this.memory.set(input.workspaceId, `agent:${node.agentId}:last`, routed.output, projectId)
 
       await this.bus.publish(input.runId, {
         fromAgentId: node.agentId,
