@@ -1,123 +1,103 @@
 import { prisma } from '@/server/db/client'
-import { getProjectFileMap } from '@/server/services/project-file.service'
-import { SimulatedDeploymentProvider } from '@/server/deployments/deployment-provider'
-import { VercelDeploymentProvider } from '@/server/deployments/vercel.provider'
-import { trackEvent } from '@/server/services/analytics.service'
+import { getDeploymentProvider } from '@/server/deployments/provider-factory'
+import type { DeploymentInput } from '@/server/deployments/deployment-provider'
+import { logger } from '@/lib/logger'
 
-// Local-process fallback for environments without a configured database.
-// This is intentionally ephemeral and should not be relied on for production persistence.
-const fallbackDeployments = new Map<string, Record<string, unknown>>()
+const UNSAFE_ENV_KEY_PATTERN =
+  /(?:^|_)(?:SECRET|TOKEN|PASSWORD|PRIVATE|DATABASE_URL|API_KEY|KEY)(?:_|$)/i
+const DEPLOYMENT_STATUS_POLL_ATTEMPTS = 5
+const DEPLOYMENT_STATUS_POLL_INTERVAL_MS = 3_000
 
-function getDeploymentProvider() {
-  if (process.env.VERCEL_TOKEN && process.env.VERCEL_TEAM_ID) {
-    return new VercelDeploymentProvider()
-  }
-  return new SimulatedDeploymentProvider()
+function normalizeFiles(files: Record<string, string>) {
+  return Object.fromEntries(
+    Object.entries(files).filter(
+      ([file, content]) => Boolean(file.trim()) && typeof content === 'string' && content.trim().length > 0,
+    ),
+  )
 }
 
-export async function deployProject(input: {
-  projectId: string
-  target?: 'preview' | 'production'
-}) {
-  const provider = getDeploymentProvider()
-  const files = await getProjectFileMap(input.projectId)
-
-  let created: { id: string } | null = null
-
-  try {
-    created = await prisma.deployment.create({
-      data: {
-        projectId: input.projectId,
-        provider: provider instanceof VercelDeploymentProvider ? 'vercel' : 'simulated',
-        target: input.target === 'production' ? 'PRODUCTION' : 'PREVIEW',
-        status: 'QUEUED',
-        logs: ['Deployment queued'],
-      },
-    })
-  } catch {
-    console.warn('Deployment persistence unavailable; using in-memory fallback record')
-    created = { id: `sim_local_${Date.now()}` }
-  }
-
-  try {
-    const result = await provider.createDeployment({
-      projectId: input.projectId,
-      files,
-      target: input.target,
-    })
-
-    const deployment = await prisma.deployment
-      .update({
-        where: { id: created.id },
-        data: {
-          provider: result.provider,
-          externalId: result.externalId,
-          url: result.url,
-          status: result.status,
-          logs: result.logs ?? [],
-        },
-      })
-      .catch(() => ({
-        id: created.id,
-        projectId: input.projectId,
-        provider: result.provider,
-        externalId: result.externalId ?? null,
-        url: result.url ?? null,
-        status: result.status,
-        target: input.target === 'production' ? 'PRODUCTION' : 'PREVIEW',
-        logs: result.logs ?? [],
-      }))
-
-    fallbackDeployments.set(created.id, deployment as Record<string, unknown>)
-
-    await trackEvent({
-      projectId: input.projectId,
-      eventName: 'DEPLOYMENT_CREATED',
-      metadata: {
-        deploymentId: deployment.id,
-        target: deployment.target,
-        status: deployment.status,
-      },
-    }).catch(() => null)
-
-    return deployment
-  } catch (error) {
-    const failedData = {
-      id: created.id,
-      projectId: input.projectId,
-      provider: provider instanceof VercelDeploymentProvider ? 'vercel' : 'simulated',
-      externalId: null,
-      url: null,
-      status: 'FAILED',
-      target: input.target === 'production' ? 'PRODUCTION' : 'PREVIEW',
-      logs: [
-        'Deployment failed',
-        error instanceof Error ? error.message : 'Unknown deployment error',
-      ],
-    }
-
-    fallbackDeployments.set(created.id, failedData)
-
-    return prisma.deployment
-      .update({
-        where: { id: created.id },
-        data: {
-          status: 'FAILED',
-          logs: failedData.logs,
-        },
-      })
-      .catch(() => failedData)
-  }
-}
-
-export async function getDeployment(deploymentId: string) {
-  return prisma.deployment
-    .findUniqueOrThrow({ where: { id: deploymentId } })
-    .catch(() => {
-      const fallback = fallbackDeployments.get(deploymentId)
-      if (!fallback) {
-        throw new Error('Deployment not found')
+function sanitizeEnv(env: DeploymentInput['env']) {
+  if (!env) return undefined
+  return Object.fromEntries(
+    Object.entries(env).filter(([key, value]) => {
+      if (!key || !value) return false
+      if (!/^[A-Z][A-Z0-9_]*$/.test(key)) return false
+      if (key.startsWith('NEXT_PUBLIC_')) {
+        return !/(?:SECRET|TOKEN|PASSWORD|PRIVATE)/i.test(key)
       }
-      return fallback
+      return !UNSAFE_ENV_KEY_PATTERN.test(key)
+    }),
+  )
+}
+
+export async function createDeployment(input: DeploymentInput) {
+  const files = normalizeFiles(input.files)
+  if (Object.keys(files).length === 0) {
+    throw new Error('Cannot deploy empty files')
+  }
+
+  const provider = getDeploymentProvider()
+  const env = sanitizeEnv(input.env)
+  const created = await provider.createDeployment({ ...input, files, env })
+
+  const deployment = await prisma.deployment.create({
+    data: {
+      projectId: input.projectId,
+      provider: created.provider,
+      externalId: created.externalId,
+      url: created.url,
+      status: created.status,
+      logs: created.logs,
+    },
+  })
+
+  await prisma.analyticsEvent.create({
+    data: {
+      eventType: 'DEPLOYMENT_CREATED',
+      projectId: input.projectId,
+      metadata: {
+        provider: created.provider,
+        status: created.status,
+      },
+    },
+  })
+
+  if (created.status === 'FAILED') {
+    logger.error('deployment_failed', {
+      projectId: input.projectId,
+      provider: created.provider,
+      logs: created.logs,
     })
+    return deployment
+  }
+
+  if (created.externalId) {
+    const status = await pollDeploymentStatus(deployment.id, created.externalId)
+    return status
+  }
+
+  return deployment
+}
+
+export async function pollDeploymentStatus(deploymentId: string, externalId: string) {
+  const provider = getDeploymentProvider()
+  let latest = await provider.getDeploymentStatus(externalId)
+
+  for (
+    let attempt = 0;
+    attempt < DEPLOYMENT_STATUS_POLL_ATTEMPTS && latest.status === 'BUILDING';
+    attempt += 1
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, DEPLOYMENT_STATUS_POLL_INTERVAL_MS))
+    latest = await provider.getDeploymentStatus(externalId)
+  }
+
+  return prisma.deployment.update({
+    where: { id: deploymentId },
+    data: {
+      status: latest.status,
+      logs: latest.logs,
+      url: latest.url ?? undefined,
+    },
+  })
 }

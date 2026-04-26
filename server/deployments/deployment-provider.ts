@@ -1,16 +1,16 @@
 export type DeploymentInput = {
   projectId: string
   files: Record<string, string>
-  env?: Record<string, string>
   target?: 'preview' | 'production'
+  env?: Record<string, string>
 }
 
 export type DeploymentResult = {
   provider: string
   externalId?: string
   url?: string
-  status: 'QUEUED' | 'BUILDING' | 'READY' | 'FAILED'
-  logs?: string[]
+  status: 'READY' | 'BUILDING' | 'FAILED'
+  logs: string[]
 }
 
 export interface DeploymentProvider {
@@ -23,9 +23,9 @@ export class SimulatedDeploymentProvider implements DeploymentProvider {
     return {
       provider: 'simulated',
       externalId: `sim_${input.projectId}_${Date.now()}`,
-      url: `https://${input.projectId}.holy.app`,
+      url: `https://holy-${input.projectId}.vercel.app`,
       status: 'READY',
-      logs: ['Simulated build completed'],
+      logs: ['Simulated deployment created'],
     }
   }
 
@@ -34,7 +34,7 @@ export class SimulatedDeploymentProvider implements DeploymentProvider {
       provider: 'simulated',
       externalId,
       status: 'READY',
-      logs: ['Deployment ready'],
+      logs: ['Simulated deployment ready'],
     }
   }
 }

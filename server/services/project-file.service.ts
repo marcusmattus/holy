@@ -1,29 +1,20 @@
 import { prisma } from '@/server/db/client'
 
-export async function getProjectFileMap(projectId: string): Promise<Record<string, string>> {
-  const latestVersion = await prisma.projectVersion
-    .findFirst({
-      where: { projectId },
-      orderBy: { createdAt: 'desc' },
-    })
-    .catch(() => null)
+export type FileMap = Record<string, string>
 
-  if (!latestVersion?.code) {
-    return {
-      '/App.tsx': 'export default function App() { return <div>Holy app</div> }',
-    }
-  }
+export async function getProjectFileMap(projectId: string): Promise<FileMap> {
+  const files = await prisma.projectFile.findMany({ where: { projectId } })
+  return Object.fromEntries(files.map((file) => [file.path, file.content]))
+}
 
-  try {
-    const parsed = JSON.parse(latestVersion.code) as Record<string, string>
-    if (parsed && typeof parsed === 'object') {
-      return parsed
-    }
-  } catch {
-    // fall through
-  }
-
-  return {
-    '/App.tsx': latestVersion.code,
-  }
+export async function upsertProjectFiles(projectId: string, files: FileMap) {
+  return prisma.$transaction(
+    Object.entries(files).map(([path, content]) =>
+      prisma.projectFile.upsert({
+        where: { projectId_path: { projectId, path } },
+        update: { content },
+        create: { projectId, path, content },
+      })
+    )
+  )
 }
