@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server'
 import { generateText } from '@/lib/ai'
+import { extractJsonObject, toHolyFileMap } from '@/features/studio/lib/file-utils'
 import type { AiPatchRequest, AiPatchResponse } from '@/features/studio/types'
-
-function extractJson(text: string) {
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start === -1 || end === -1) throw new Error('No JSON object returned')
-  return JSON.parse(text.slice(start, end + 1))
-}
 
 export async function POST(req: Request) {
   try {
@@ -46,9 +40,16 @@ Return shape:
 }
 `)
 
-    const parsed = extractJson(raw) as AiPatchResponse
+    const parsed = extractJsonObject(raw)
+    const files = toHolyFileMap(parsed.files)
+    const summary = typeof parsed.summary === 'string' ? parsed.summary : 'Patch applied'
 
-    return NextResponse.json(parsed)
+    if (Object.keys(files).length === 0) {
+      throw new Error('AI patch response did not include valid files')
+    }
+
+    const payload: AiPatchResponse = { summary, files }
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('[AI_PATCH_ERROR]', error)
     return NextResponse.json({ error: 'Failed to patch files' }, { status: 500 })

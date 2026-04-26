@@ -24,7 +24,7 @@ export function SandpackRuntime({ files }: { files: HolyFileMap }) {
       }}
     >
       <SandpackLayout className="!h-full !border-white/10 !bg-transparent">
-        <div className="hidden xl:block w-56 border-r border-white/10 bg-black/30">
+        <div className="hidden w-56 border-r border-white/10 bg-black/30 xl:block">
           <SandpackFileExplorer />
         </div>
         <div className="w-1/2 min-w-[420px] border-r border-white/10">

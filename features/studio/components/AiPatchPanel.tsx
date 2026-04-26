@@ -12,9 +12,11 @@ export function AiPatchPanel({
 }) {
   const [instruction, setInstruction] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function patch() {
     if (!instruction.trim()) return
+    setError(null)
     setLoading(true)
 
     const res = await fetch('/api/ai/patch', {
@@ -22,6 +24,21 @@ export function AiPatchPanel({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ instruction, files }),
     })
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to apply patch'
+      try {
+        const data = await res.json()
+        if (typeof data.error === 'string') {
+          errorMessage = data.error
+        }
+      } catch {
+        errorMessage = 'Failed to apply patch (invalid server response)'
+      }
+      setError(errorMessage)
+      setLoading(false)
+      return
+    }
 
     const data = await res.json()
     setLoading(false)
@@ -71,6 +88,7 @@ export function AiPatchPanel({
         >
           {loading ? 'Patching files…' : 'Apply AI Patch'}
         </button>
+        {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
       </div>
     </div>
   )

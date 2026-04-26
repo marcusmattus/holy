@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server'
 import { generateText } from '@/lib/ai'
 import { defaultHolyFiles } from '@/features/studio/lib/default-files'
-
-function extractJson(text: string) {
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start === -1 || end === -1) throw new Error('No JSON object returned')
-  return JSON.parse(text.slice(start, end + 1))
-}
+import { extractJsonObject, toHolyFileMap } from '@/features/studio/lib/file-utils'
 
 export async function POST(req: Request) {
   try {
@@ -35,13 +29,15 @@ Idea:
 ${prompt}
 `)
 
-    const parsed = extractJson(raw)
+    const parsed = extractJsonObject(raw)
+    const files = toHolyFileMap(parsed.files)
+    const summary = typeof parsed.summary === 'string' ? parsed.summary : 'Generated app'
 
     return NextResponse.json({
-      summary: parsed.summary ?? 'Generated app',
+      summary,
       files: {
         ...defaultHolyFiles,
-        ...parsed.files,
+        ...files,
       },
     })
   } catch (error) {
