@@ -75,7 +75,7 @@ export async function allocateRevenueShares(input: { purchaseId: string }) {
   )
   const remainder = purchase.amountCents - allocatedTotal
 
-  if (remainder > 0 && allocations.length > 0) {
+  if (remainder > 0) {
     const creatorIndex = allocations.findIndex(
       (allocation) => allocation.rule.role === 'CREATOR'
     )

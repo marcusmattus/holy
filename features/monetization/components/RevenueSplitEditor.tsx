@@ -134,7 +134,7 @@ export function RevenueSplitEditor({
           />
         </label>
         <div className="rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm">
-          Platform fee: {(PLATFORM_BPS / 100).toFixed(0)}% ({PLATFORM_BPS} bps)
+          Platform fee: {PLATFORM_BPS / 100}% ({PLATFORM_BPS} bps)
         </div>
       </div>
       <p
