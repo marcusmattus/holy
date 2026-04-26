@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 export interface AppCardProps {
   id: string
+  slug?: string
   name: string
   description: string
   author: string
@@ -13,6 +14,7 @@ export interface AppCardProps {
 
 export function AppCard({
   id,
+  slug,
   name,
   description,
   author,
@@ -47,7 +49,7 @@ export function AppCard({
           {price === 0 ? 'Free' : `$${price}`}
         </span>
         <Link
-          href={`/dashboard/store/${id}`}
+          href={slug ? `/store/${slug}` : `/dashboard/store/${id}`}
           className="rounded-lg bg-[#7C3AED] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#6D28D9] transition-colors"
         >
           View
