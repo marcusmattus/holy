@@ -1,3 +1,5 @@
+import { trackEvent } from '@/server/services/analytics.service'
+
 export async function POST(req: Request) {
   const body = await req.json()
   const { projectId, files } = body
@@ -11,6 +13,12 @@ export async function POST(req: Request) {
 
   // TODO: integrate Vercel API
   const fakeUrl = `https://holy-${projectId}.vercel.app`
+
+  await trackEvent({
+    projectId,
+    eventName: 'DEPLOYMENT_CREATED',
+    metadata: { source: 'legacy-deploy-route' },
+  }).catch(() => null)
 
   return Response.json({
     url: fakeUrl,

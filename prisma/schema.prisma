@@ -8,47 +8,111 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id             String           @id @default(cuid())
+  email          String           @unique
+  projects       Project[]
+  analyticsEvents AnalyticsEvent[]
+  referrals      Referral[]       @relation("ReferralReferrer")
+  createdAt      DateTime         @default(now())
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id              String           @id @default(cuid())
+  name            String
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions        ProjectVersion[]
+  listings        StoreListing[]
+  deployments     Deployment[]
+  analyticsEvents AnalyticsEvent[]
+  createdAt       DateTime         @default(now())
 }
 
 model ProjectVersion {
   id        String   @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   code      String
   createdAt DateTime @default(now())
 }
 
 model StoreListing {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String
-  description String
-  price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id              String           @id @default(cuid())
+  projectId       String
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String           @unique
+  description     String
+  price           Float?
+  isPublished     Boolean          @default(false)
+  analyticsEvents AnalyticsEvent[]
+  referrals       Referral[]
+  createdAt       DateTime         @default(now())
 }
 
 model Deployment {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  url       String
-  status    String
-  createdAt DateTime @default(now())
+  id         String           @id @default(cuid())
+  projectId  String
+  project    Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider   String
+  externalId String?
+  url        String?
+  status     DeploymentStatus @default(QUEUED)
+  target     DeploymentTarget @default(PREVIEW)
+  logs       Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(cuid())
+  projectId String?
+  project   Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listingId String?
+  listing   StoreListing?      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?              @relation(fields: [userId], references: [id])
+  sessionId String?
+  eventName AnalyticsEventName
+  source    String?
+  referrer  String?
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  @@index([projectId, eventName])
+  @@index([listingId, eventName])
+}
+
+model Referral {
+  id         String       @id @default(cuid())
+  code       String       @unique
+  referrerId String
+  referrer   User         @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  listingId  String?
+  listing    StoreListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+}
+
+enum DeploymentStatus {
+  QUEUED
+  BUILDING
+  READY
+  FAILED
+}
+
+enum DeploymentTarget {
+  PREVIEW
+  PRODUCTION
+}
+
+enum AnalyticsEventName {
+  APP_VIEW
+  STORE_VIEW
+  INSTALL_CLICK
+  INSTALL_COMPLETED
+  CHECKOUT_STARTED
+  PURCHASE_COMPLETED
+  REFERRAL_CLICKED
+  DEPLOYMENT_CREATED
+  AI_PATCH_APPLIED
 }

@@ -9,6 +9,7 @@ import {
   BarChart2,
   DollarSign,
   Settings,
+  LineChart,
 } from 'lucide-react'
 
 const NAV = [
@@ -16,6 +17,7 @@ const NAV = [
   { href: '/dashboard/projects', label: 'Projects', icon: FolderOpen },
   { href: '/dashboard/store', label: 'Store', icon: Store },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart2 },
+  { href: '/dashboard/creator', label: 'Creator', icon: LineChart },
   { href: '/dashboard/revenue', label: 'Revenue', icon: DollarSign },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]

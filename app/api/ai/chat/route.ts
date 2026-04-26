@@ -2,6 +2,7 @@ import { streamText } from 'ai'
 import { createOpenAI, openai } from '@ai-sdk/openai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { google } from '@ai-sdk/google'
+import { trackEvent } from '@/server/services/analytics.service'
 
 const SYSTEM_PROMPT = `You are Holy AI, an expert web developer assistant built into the Holy vibecoding platform. Your job is to help users build production-ready websites and web apps.
 
@@ -53,7 +54,15 @@ function getModel(modelId: string) {
 }
 
 export async function POST(req: Request) {
-  const { messages, model = 'gpt-4o' } = await req.json()
+  const { messages, model = 'gpt-4o', projectId } = await req.json()
+
+  if (typeof projectId === 'string') {
+    await trackEvent({
+      projectId,
+      eventName: 'AI_PATCH_APPLIED',
+      metadata: { source: 'ai-chat' },
+    }).catch(() => null)
+  }
 
   const result = streamText({
     model: getModel(model),

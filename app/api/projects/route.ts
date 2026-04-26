@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createProject, getProjects } from '@/server/services/project.service'
 
-export async function GET(req: Request) {
+export async function GET() {
   const userId = 'demo-user'
   const projects = await getProjects(userId)
   return NextResponse.json(projects)
