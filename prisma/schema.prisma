@@ -32,13 +32,49 @@ model Project {
   deployments  Deployment[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  id        String    @id @default(cuid())
+  email     String    @unique
+  projects  Project[]
+  installs  Install[]
+  createdAt DateTime  @default(now())
+}
+
+model Project {
+  id          String           @id @default(cuid())
+  name        String
+  slug        String?          @unique
+  description String?
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  status      ProjectStatus    @default(DRAFT)
+  files       ProjectFile[]
+  versions    ProjectVersion[]
+  listing     StoreListing?
+  deployments Deployment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  path      String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, path])
 }
 
 model ProjectVersion {
   id        String   @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  code      String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label     String?
+  prompt    String?
+  summary   String?
+  filesJson Json
   createdAt DateTime @default(now())
 }
 
@@ -61,6 +97,79 @@ model StoreListing {
   referrals         Referral[]
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
+  id          String         @id @default(cuid())
+  projectId   String         @unique
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String         @unique
+  description String
+  category    String?
+  priceType   PriceType      @default(FREE)
+  priceCents  Int            @default(0)
+  status      ListingStatus  @default(DRAFT)
+  installs    Install[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Install {
+  id        String       @id @default(cuid())
+  listingId String
+  listing   StoreListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+  id               String            @id @default(cuid())
+  email            String            @unique
+  projects         Project[]
+  installs         Install[]
+  rewardLedgers    RewardLedger[]
+  revenueScenarios RevenueScenario[]
+  analyticsEvents  AnalyticsEvent[]
+  createdAt        DateTime          @default(now())
+}
+
+model Project {
+  id               String            @id @default(cuid())
+  name             String
+  userId           String
+  user             User              @relation(fields: [userId], references: [id])
+  versions         ProjectVersion[]
+  listings         StoreListing[]
+  installs         Install[]
+  rewardLedgers    RewardLedger[]
+  revenueScenarios RevenueScenario[]
+  analyticsEvents  AnalyticsEvent[]
+  deployments      Deployment[]
+  createdAt        DateTime          @default(now())
+}
+
+model ProjectVersion {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  prompt     String?
+  spec       String?
+  fileTree   Json?
+  code       String
+  createdAt  DateTime @default(now())
+}
+
+model StoreListing {
+  id             String           @id @default(cuid())
+  projectId      String           @unique
+  project        Project          @relation(fields: [projectId], references: [id])
+  name           String
+  slug           String           @unique
+  description    String
+  price          Float?
+  pricingModel   PricingModel     @default(FREE)
+  isPublished    Boolean          @default(false)
+  installs       Install[]
+  rewardLedgers  RewardLedger[]
+  analyticsEvents AnalyticsEvent[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model Deployment {
@@ -211,4 +320,98 @@ enum ReferralStatus {
   PENDING
   CONVERTED
   EXPIRED
+enum ProjectStatus {
+  DRAFT
+  BUILDING
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PriceType {
+  FREE
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  ARCHIVED
+model Install {
+  id          String       @id @default(cuid())
+  listingId   String
+  listing     StoreListing @relation(fields: [listingId], references: [id])
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id])
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+  pricePaid   Float?
+  source      String?
+  createdAt   DateTime     @default(now())
+
+  @@index([userId, listingId, projectId])
+}
+
+model RewardLedger {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  projectId   String?
+  project     Project?       @relation(fields: [projectId], references: [id])
+  listingId   String?
+  listing     StoreListing?  @relation(fields: [listingId], references: [id])
+  kind        RewardKind
+  amountCents Int
+  currency    String         @default("USD")
+  note        String?
+  createdAt   DateTime       @default(now())
+}
+
+model RevenueScenario {
+  id                      String   @id @default(cuid())
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id])
+  projectId               String?
+  project                 Project? @relation(fields: [projectId], references: [id])
+  monthlyActiveUsers      Int      @default(0)
+  conversionRate          Float    @default(0)
+  averageRevenuePerUser   Float    @default(0)
+  projectedMonthlyRevenue Float    @default(0)
+  createdAt               DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id         String             @id @default(cuid())
+  userId     String?
+  user       User?              @relation(fields: [userId], references: [id])
+  projectId  String?
+  project    Project?           @relation(fields: [projectId], references: [id])
+  listingId  String?
+  listing    StoreListing?      @relation(fields: [listingId], references: [id])
+  eventName  AnalyticsEventName
+  source     String?
+  metadata   Json?
+  createdAt  DateTime           @default(now())
+}
+
+enum PricingModel {
+  FREE
+  PAID
+  SUBSCRIPTION
+}
+
+enum RewardKind {
+  CREATOR_EARNING
+  REFERRAL_REWARD
+}
+
+enum AnalyticsEventName {
+  APP_VIEW
+  STORE_VIEW
+  INSTALL_CLICK
+  INSTALL_COMPLETED
+  PURCHASE_COMPLETED
+  DEPLOYMENT_CREATED
 }
