@@ -8,6 +8,30 @@ datasource db {
 }
 
 model User {
+  id                   String             @id @default(cuid())
+  email                String             @unique
+  projects             Project[]
+  purchases            Purchase[]
+  revenueShareRules    RevenueShareRule[]
+  revenueShares        RevenueShare[]
+  rewardLedgerEntries  RewardLedger[]
+  referralsAsReferrer  Referral[]         @relation("ReferralReferrer")
+  referralsAsReferred  Referral[]         @relation("ReferralReferred")
+  installs             Install[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model Project {
+  id           String           @id @default(cuid())
+  name         String
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  versions     ProjectVersion[]
+  listings     StoreListing[]
+  deployments  Deployment[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   id        String    @id @default(cuid())
   email     String    @unique
   projects  Project[]
@@ -55,6 +79,24 @@ model ProjectVersion {
 }
 
 model StoreListing {
+  id                String                @id @default(cuid())
+  projectId         String
+  project           Project               @relation(fields: [projectId], references: [id])
+  name              String
+  title             String
+  slug              String                @unique
+  description       String
+  price             Float?
+  priceType         StoreListingPriceType @default(FREE)
+  priceCents        Int                   @default(0)
+  currency          String                @default("gbp")
+  isPublished       Boolean               @default(false)
+  installs          Install[]
+  purchases         Purchase[]
+  revenueShareRules RevenueShareRule[]
+  referrals         Referral[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   id          String         @id @default(cuid())
   projectId   String         @unique
   project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -139,6 +181,145 @@ model Deployment {
   createdAt DateTime @default(now())
 }
 
+model Install {
+  id        String       @id @default(cuid())
+  listingId String
+  listing   StoreListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([listingId, userId])
+}
+
+model Purchase {
+  id                  String          @id @default(cuid())
+  listingId           String
+  listing             StoreListing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId             String
+  buyer               User            @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  amountCents         Int
+  currency            String          @default("gbp")
+  status              PurchaseStatus  @default(PENDING)
+  stripeSessionId     String?         @unique
+  stripePaymentIntent String?         @unique
+  revenueShares       RevenueShare[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model RevenueShareRule {
+  id          String           @id @default(cuid())
+  listingId   String
+  listing     StoreListing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  role        RevenueShareRole
+  basisPoints Int
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([listingId, recipientId, role])
+}
+
+model RevenueShare {
+  id          String             @id @default(cuid())
+  purchaseId  String
+  purchase    Purchase           @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User               @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  role        RevenueShareRole
+  amountCents Int
+  currency    String             @default("gbp")
+  status      RevenueShareStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model RewardLedger {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceType      RewardSourceType
+  sourceId        String?
+  amount          Int
+  currency        RewardCurrency   @default(POINTS)
+  status          RewardStatus     @default(PENDING)
+  description     String?
+  metadata        Json?
+  settlementTxHash String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Referral {
+  id         String         @id @default(cuid())
+  referrerId String
+  referrer   User           @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId String?
+  referred   User?          @relation("ReferralReferred", fields: [referredId], references: [id], onDelete: SetNull)
+  listingId  String?
+  listing    StoreListing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  code       String         @unique
+  status     ReferralStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+enum StoreListingPriceType {
+  FREE
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RevenueShareRole {
+  CREATOR
+  REFERRER
+  PLATFORM
+  COLLABORATOR
+}
+
+enum RevenueShareStatus {
+  PENDING
+  AVAILABLE
+  PAID_OUT
+  CANCELLED
+}
+
+enum RewardSourceType {
+  PURCHASE
+  INSTALL
+  REFERRAL
+  PUBLISH
+  MANUAL
+}
+
+enum RewardCurrency {
+  POINTS
+  GBP_CENTS
+  USD_CENTS
+  USDC_UNITS
+}
+
+enum RewardStatus {
+  PENDING
+  AVAILABLE
+  SETTLED
+  CANCELLED
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
+  EXPIRED
 enum ProjectStatus {
   DRAFT
   BUILDING

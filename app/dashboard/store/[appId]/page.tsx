@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CheckoutButton } from '@/features/store/components/CheckoutButton'
 
 const STORE_APPS: Record<
   string,
@@ -79,9 +80,9 @@ export default function AppDetailPage({
           <span>⭐ {app.rating}</span>
           <span>{app.downloads.toLocaleString()} installs</span>
         </div>
-        <button className="w-full rounded-lg bg-[#7C3AED] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6D28D9] transition-colors">
-          Install App — ${app.price}
-        </button>
+        <div className="flex justify-center">
+          <CheckoutButton listingId={params.appId} buyerId="demo-user" />
+        </div>
       </div>
     </div>
   )
