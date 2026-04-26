@@ -3,11 +3,18 @@ export type RetryPolicy = {
   backoffMs: number
 }
 
+export class TransientWorkflowError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'TransientWorkflowError'
+  }
+}
+
 export const DEFAULT_RETRY_POLICY: RetryPolicy = {
   maxAttempts: 3,
   backoffMs: 250,
 }
 
 export function isTransientWorkflowError(error: unknown) {
-  return error instanceof Error && /timeout|temporary|network/i.test(error.message)
+  return error instanceof TransientWorkflowError
 }

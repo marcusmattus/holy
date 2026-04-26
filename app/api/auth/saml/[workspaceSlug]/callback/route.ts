@@ -7,7 +7,7 @@ export async function POST(
 ) {
   try {
     const { workspaceSlug } = await params
-    const body = (await req.json()) as Record<string, string>
+    const body = await req.json()
     return NextResponse.json(handleSamlCallback(workspaceSlug, body))
   } catch {
     return NextResponse.json({ error: 'SAML authentication failed' }, { status: 400 })

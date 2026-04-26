@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
 import type { MarketplaceSearchItem, SearchProvider } from '@/server/search/search-provider'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/server/db'
 
 const staticAssets: MarketplaceSearchItem[] = [
   {
@@ -38,7 +36,7 @@ export class PostgresSearchProvider implements SearchProvider {
       type: 'StoreListing',
       title: listing.name,
       description: listing.description,
-      score: Math.max(10, Math.round((listing.price ?? 0) * 2)),
+      score: 40,
       isPublic: listing.isPublished,
       isCertified: false,
     }))

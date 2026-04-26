@@ -1,7 +1,6 @@
-import { PrismaClient, ComplianceReviewStatus, SettlementBatchStatus } from '@prisma/client'
+import { ComplianceReviewStatus, SettlementBatchStatus } from '@prisma/client'
 import { auditLog } from '@/server/observability/logger'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/server/db'
 
 function isSettlementPilotEnabled() {
   return process.env.HOLY_SETTLEMENT_PILOT_ENABLED === 'true'
@@ -30,7 +29,7 @@ export async function previewSettlementBatch(params: {
     throw new Error('Provider is not approved for settlement pilot')
   }
 
-  if (approval.maxBatchAmount && params.totalAmount > approval.maxBatchAmount) {
+  if (approval.maxBatchAmount != null && params.totalAmount > approval.maxBatchAmount) {
     throw new Error('Batch amount exceeds approved maximum')
   }
 

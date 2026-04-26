@@ -1,11 +1,10 @@
-import { PrismaClient, RuntimeExecutionStatus } from '@prisma/client'
+import { RuntimeExecutionStatus } from '@prisma/client'
 import type { RuntimeExecutionInput } from '@/server/runtime/agent-runtime'
 import { DEFAULT_RUNTIME_POLICY } from '@/server/runtime/runtime-policy'
 import { SimulatedSandboxProvider } from '@/server/runtime/providers/simulated-sandbox.provider'
 import { NodeVmProvider } from '@/server/runtime/providers/node-vm.provider'
 import { auditLog } from '@/server/observability/logger'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/server/db'
 
 function getProvider() {
   return process.env.HOLY_RUNTIME_PROVIDER === 'node-vm'
@@ -24,7 +23,7 @@ export async function executeAgentRuntime(params: {
       agentId: params.agentId,
       workspaceId: params.workspaceId,
       status: RuntimeExecutionStatus.RUNNING,
-      input: JSON.parse(JSON.stringify(params.input)) as object,
+      input: structuredClone(params.input) as object,
       startedAt: new Date(),
     },
   })

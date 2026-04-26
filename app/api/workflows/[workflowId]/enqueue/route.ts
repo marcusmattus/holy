@@ -9,14 +9,34 @@ export async function POST(
   const body = await req.json()
   const { workflowId } = await params
   const actor = getActor(req.headers)
-  const idempotencyKey = req.headers.get('idempotency-key') ?? crypto.randomUUID()
+  const idempotencyKey = req.headers.get('idempotency-key')
+  if (!idempotencyKey) {
+    return NextResponse.json(
+      { error: 'Missing idempotency-key header' },
+      { status: 400 }
+    )
+  }
+
+  const steps = Array.isArray(body.steps) ? body.steps : []
+  for (const step of steps) {
+    const isValid =
+      step &&
+      typeof step === 'object' &&
+      typeof (step as { id?: unknown }).id === 'string' &&
+      ((step as { type?: unknown }).type === 'task' ||
+        (step as { type?: unknown }).type === 'approval') &&
+      typeof (step as { action?: unknown }).action === 'string'
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid workflow steps payload' }, { status: 400 })
+    }
+  }
 
   const run = await enqueueWorkflowRun({
     workflowId,
     runId: body.runId ?? crypto.randomUUID(),
     idempotencyKey,
     actor,
-    steps: Array.isArray(body.steps) ? body.steps : [],
+    steps: steps as Array<{ id: string; type: 'task' | 'approval'; action: string }>,
   })
 
   return NextResponse.json(run)

@@ -1,7 +1,6 @@
-import { PrismaClient, CertificationStatus, CertificationLevel } from '@prisma/client'
+import { CertificationStatus, CertificationLevel } from '@prisma/client'
 import { auditLog } from '@/server/observability/logger'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/server/db'
 
 export async function listAgentCertifications() {
   return prisma.agentCertification.findMany({
