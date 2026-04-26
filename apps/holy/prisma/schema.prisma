@@ -1,0 +1,94 @@
+// Holy Database Schema
+// Holy-specific data — HolyOS handles analytics, rewards, ads
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  avatarUrl      String?
+  walletAddress  String?
+  holyosUserId   String    @unique
+  plan           Plan      @default(FREE)
+  projects       Project[]
+  reviews        Review[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAMS
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  name          String
+  slug          String          @unique
+  description   String?
+  thumbnail     String?
+  published     Boolean         @default(false)
+  storePrice    Float?          @default(0)
+  category      String?
+  techStack     String?
+  deployUrl     String?
+  holyosProjectId String        @unique
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  versions      ProjectVersion[]
+  storeEntry    StoreEntry?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model ProjectVersion {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshot    String
+  label       String?
+  createdAt   DateTime @default(now())
+}
+
+model StoreEntry {
+  id            String      @id @default(cuid())
+  projectId     String      @unique
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status        StoreStatus @default(DRAFT)
+  screenshots   String?
+  longDescription String?
+  demoUrl       String?
+  installs      Int         @default(0)
+  avgRating     Float       @default(0)
+  reviewCount   Int         @default(0)
+  submittedAt   DateTime?
+  publishedAt   DateTime?
+  reviews       Review[]
+}
+
+enum StoreStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  storeEntryId  String
+  storeEntry    StoreEntry  @relation(fields: [storeEntryId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+}
