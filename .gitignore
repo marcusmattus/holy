@@ -105,3 +105,4 @@ env.bak/
 venv.bak/
 .pytest_cache/
 .vercel
+.env*.local

@@ -1,28 +1,55 @@
 'use client'
 
 import { useState } from 'react'
-// @ts-ignore - AI SDK types
-import { Message, useChat } from 'ai/react'
 import { Send, Sparkles } from 'lucide-react'
 
+type Message = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export function AIAssistant({ projectId }: { projectId: string }) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: '/api/ai/chat',
-      body: { projectId },
-      initialMessages: [
-        {
-          id: '1',
-          role: 'assistant',
-          content:
-            '✦ Holy AI ready. Describe what you want to build and I will generate the code for you.',
-        },
-      ],
-    })
+  const [input, setInput] = useState('')
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: '✦ Holy AI ready. Describe what you want to build and I will generate the code for you.',
+    },
+  ])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+    }
+    
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+    
+    // Simulate AI response
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Processing your request...',
+      }
+      setMessages(prev => [...prev, aiMessage])
+      setIsLoading(false)
+    }, 1000)
+  }
 
   return (
     <div className="w-80 flex-shrink-0 flex flex-col border-l border-border bg-card/50 backdrop-blur-xl relative">
-      {/* Ethereal background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#C9A24A]/5 via-transparent to-transparent pointer-events-none" />
 
       <div className="px-4 py-3 border-b border-border/50 flex items-center space-x-2 relative z-10">
@@ -32,15 +59,9 @@ export function AIAssistant({ projectId }: { projectId: string }) {
         </span>
         {isLoading && (
           <div className="flex space-x-1 ml-auto">
-            <div className="w-1 h-1 rounded-full bg-[#C9A24A] streaming-dot" />
-            <div
-              className="w-1 h-1 rounded-full bg-[#C9A24A] streaming-dot"
-              style={{ animationDelay: '0.2s' }}
-            />
-            <div
-              className="w-1 h-1 rounded-full bg-[#C9A24A] streaming-dot"
-              style={{ animationDelay: '0.4s' }}
-            />
+            <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" />
+            <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <div className="w-1 h-1 rounded-full bg-[#C9A24A] animate-pulse" style={{ animationDelay: '0.4s' }} />
           </div>
         )}
       </div>
@@ -51,7 +72,7 @@ export function AIAssistant({ projectId }: { projectId: string }) {
             key={msg.id}
             className={`text-xs rounded-2xl px-4 py-3 ${
               msg.role === 'assistant'
-                ? 'glass-panel text-foreground border-[#C9A24A]/20'
+                ? 'bg-white/5 border border-[#C9A24A]/20 text-foreground'
                 : 'bg-muted/30 text-foreground ml-4 border border-border/30'
             }`}
           >
@@ -86,7 +107,7 @@ export function AIAssistant({ projectId }: { projectId: string }) {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="rounded-2xl bg-[#C9A24A] p-2.5 text-black hover:bg-[#C9A24A]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed gold-glow"
+            className="rounded-2xl bg-[#C9A24A] p-2.5 text-black hover:bg-[#C9A24A]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={14} />
           </button>
