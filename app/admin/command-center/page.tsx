@@ -1,10 +1,11 @@
 import { CommandCenter } from '@/features/admin/command-center/CommandCenter'
 import { headers } from 'next/headers'
+import { assertAdminHeaders } from '@/server/security'
 
 export default async function CommandCenterPage() {
-  const requestHeaders = await headers()
-  const role = requestHeaders.get('x-user-role') ?? 'member'
-  if (role !== 'admin') {
+  try {
+    assertAdminHeaders(await headers())
+  } catch {
     return <main className="min-h-screen bg-[#0A0A0A] p-6 text-white">Admin access required.</main>
   }
 

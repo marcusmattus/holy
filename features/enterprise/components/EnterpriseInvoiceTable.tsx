@@ -21,7 +21,7 @@ export function EnterpriseInvoiceTable({ invoices }: { invoices: InvoiceRecord[]
           {invoices.map((invoice) => (
             <tr key={invoice.id} className="border-t border-white/10">
               <td className="py-2">{invoice.id}</td>
-              <td> {(invoice.amountCents / 100).toFixed(2)} {invoice.currency.toUpperCase()} </td>
+              <td>{(invoice.amountCents / 100).toFixed(2)} {invoice.currency.toUpperCase()}</td>
               <td>
                 <span className="rounded-full border border-white/20 px-2 py-0.5 text-xs">{invoice.status}</span>
               </td>

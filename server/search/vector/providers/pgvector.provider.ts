@@ -1,9 +1,16 @@
 import type { VectorProvider, VectorRecord, VectorSearchQuery, VectorSearchResult } from '@/server/search/vector/vector-provider'
 
 const records = new Map<string, VectorRecord>()
+const MAX_VECTOR_RECORDS = Number(process.env.VECTOR_IN_MEMORY_MAX_RECORDS ?? 20_000)
 
 export class PgvectorProvider implements VectorProvider {
   async upsert(record: VectorRecord): Promise<void> {
+    if (records.size >= MAX_VECTOR_RECORDS) {
+      const firstKey = records.keys().next().value
+      if (firstKey) {
+        records.delete(firstKey)
+      }
+    }
     records.set(`${record.tenantId}:${record.id}`, record)
   }
 

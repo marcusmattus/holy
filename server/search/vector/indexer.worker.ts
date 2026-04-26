@@ -11,6 +11,7 @@ export interface MarketplaceAssetIndexInput {
 }
 
 const contentHashes = new Set<string>()
+const MAX_CONTENT_HASHES = Number(process.env.VECTOR_CONTENT_HASH_LIMIT ?? 20_000)
 
 export async function indexMarketplaceAsset(input: MarketplaceAssetIndexInput) {
   if (!input.approved) {
@@ -28,6 +29,13 @@ export async function indexMarketplaceAsset(input: MarketplaceAssetIndexInput) {
 
   if (contentHashes.has(contentHash)) {
     return { indexed: false, reason: 'duplicate-content' }
+  }
+
+  if (contentHashes.size >= MAX_CONTENT_HASHES) {
+    const firstHash = contentHashes.values().next().value
+    if (firstHash) {
+      contentHashes.delete(firstHash)
+    }
   }
 
   contentHashes.add(contentHash)

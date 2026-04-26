@@ -82,7 +82,6 @@ export async function runRuntimeCluster(config: RuntimeClusterConfig) {
 
   registerGracefulShutdown(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()))
-    await Promise.resolve()
   })
 
   if (config.mode === 'queue' && config.queueJobs) {

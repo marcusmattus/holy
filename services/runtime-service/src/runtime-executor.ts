@@ -19,11 +19,17 @@ export async function executeRuntimeJob(
     workspaceId: scopedContext.workspaceId,
     jobId: scopedContext.jobId,
   })
+  let timeoutHandle: NodeJS.Timeout | undefined
 
   try {
     const result = await Promise.race([
       executor(scopedContext),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Execution timeout exceeded')), policy.timeoutMs)),
+      new Promise((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error('Execution timeout exceeded')),
+          policy.timeoutMs,
+        )
+      }),
     ])
 
     emitMetric({
@@ -47,6 +53,9 @@ export async function executeRuntimeJob(
     })
     throw error
   } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle)
+    }
     completeExecution(policy.workspaceId)
   }
 }

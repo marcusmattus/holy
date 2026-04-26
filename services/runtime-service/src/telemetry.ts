@@ -5,9 +5,13 @@ export interface RuntimeMetric {
 }
 
 const metricStore: RuntimeMetric[] = []
+const MAX_METRICS = Number(process.env.RUNTIME_MAX_IN_MEMORY_METRICS ?? 10_000)
 
 export function emitMetric(metric: RuntimeMetric) {
   metricStore.push(metric)
+  if (metricStore.length > MAX_METRICS) {
+    metricStore.splice(0, metricStore.length - MAX_METRICS)
+  }
 }
 
 export function getPrometheusMetrics() {

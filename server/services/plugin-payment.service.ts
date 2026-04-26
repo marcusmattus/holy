@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { PurchaseStatus } from '@prisma/client'
 import { prisma } from '@/server/db'
 
@@ -32,7 +33,7 @@ export async function checkoutPlugin(input: {
       amountCents: plugin.amountCents,
       currency: plugin.currency,
       status: PurchaseStatus.PENDING,
-      stripeSessionId: `sess_${cryptoRandom()}`,
+      stripeSessionId: `sess_${crypto.randomUUID().replaceAll('-', '')}`,
     },
   })
 }
@@ -42,8 +43,4 @@ export async function markPluginPaymentVerified(purchaseId: string) {
     where: { id: purchaseId },
     data: { status: PurchaseStatus.PAID },
   })
-}
-
-function cryptoRandom() {
-  return Math.random().toString(36).slice(2, 12)
 }
