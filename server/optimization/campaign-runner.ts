@@ -34,7 +34,7 @@ export async function runCampaign(campaignId: string, input: Record<string, unkn
     input,
     output: {
       summary: 'Autonomous optimization run completed with governed actions.',
-      approvedActionCount: proposedActions.length - appliedActions.length,
+      actionsRequiringApproval: proposedActions.length - appliedActions.length,
     },
     proposedActions,
     appliedActions,

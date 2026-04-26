@@ -21,5 +21,8 @@ export function requiresCampaignApproval(action: CampaignAction, policy: Campaig
   if (action.type === 'PUBLISH' || action.type === 'DEPLOY' || action.type === 'PRICING_CHANGE') {
     return policy.requireApprovalForPublish
   }
-  return action.riskLevel !== 'LOW' || !policy.allowAutoDraftActions
+  if (action.riskLevel === 'LOW') {
+    return !policy.allowAutoDraftActions
+  }
+  return true
 }
