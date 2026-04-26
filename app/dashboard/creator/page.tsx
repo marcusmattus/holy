@@ -24,6 +24,7 @@ type SummaryResponse = {
 }
 
 export default function CreatorDashboardPage() {
+  // Demo dashboard context until authenticated session wiring is added.
   const userId = 'demo-user'
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
 

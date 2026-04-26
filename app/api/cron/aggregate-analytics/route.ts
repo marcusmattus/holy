@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
 import { aggregateYesterdayAndTodayAnalytics } from '@/server/services/analytics-aggregation.service'
 import { env } from '@/lib/env'
-import { timingSafeEqual } from 'node:crypto'
+import { createHash, timingSafeEqual } from 'node:crypto'
 
 function safeEquals(a: string, b: string) {
-  const left = Buffer.from(a)
-  const right = Buffer.from(b)
-  if (left.length !== right.length) {
-    return false
-  }
+  const left = createHash('sha256').update(a).digest()
+  const right = createHash('sha256').update(b).digest()
 
   return timingSafeEqual(left, right)
 }

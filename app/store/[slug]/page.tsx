@@ -86,8 +86,8 @@ export default async function StoreListingPage({
   const { ref } = await searchParams
   const listing = await getListingBySlug(slug)
 
-  try {
-    await prisma.analyticsEvent.upsert({
+  void prisma.analyticsEvent
+    .upsert({
       where: {
         idempotencyKey: `listing-view:${listing.id}:${ref ?? 'none'}`,
       },
@@ -99,8 +99,7 @@ export default async function StoreListingPage({
       },
       update: {},
     })
-  } catch {
-  }
+    .catch(() => {})
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">

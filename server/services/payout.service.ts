@@ -2,6 +2,23 @@ import { prisma } from '@/server/db/client'
 import { stripe } from '@/server/stripe/client'
 import { logger } from '@/lib/logger'
 
+function getSafePayoutErrorMessage(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return 'Payout transfer failed'
+  }
+
+  const maybeError = error as { type?: string; code?: string; message?: string }
+  if (maybeError.type || maybeError.code) {
+    return `Stripe error (${maybeError.type ?? 'unknown'}:${maybeError.code ?? 'unknown'})`
+  }
+
+  if (maybeError.message) {
+    return 'Payout transfer failed'
+  }
+
+  return 'Payout transfer failed'
+}
+
 export async function getAvailablePayoutBalance(userId: string) {
   const shares = await prisma.revenueShare.findMany({
     where: {
@@ -35,6 +52,8 @@ export async function requestCreatorPayout(userId: string) {
     },
   })
 
+  let transferSent = false
+
   try {
     const transfer = await stripe.transfers.create({
       amount: amountCents,
@@ -45,38 +64,62 @@ export async function requestCreatorPayout(userId: string) {
         userId,
       },
     })
+    transferSent = true
 
-    await prisma.revenueShare.updateMany({
-      where: {
-        recipientId: userId,
-        status: 'AVAILABLE',
-      },
-      data: {
-        status: 'PAID_OUT',
-      },
-    })
+    try {
+      const [, paidPayout] = await prisma.$transaction([
+        prisma.revenueShare.updateMany({
+          where: {
+            recipientId: userId,
+            status: 'AVAILABLE',
+          },
+          data: {
+            status: 'PAID_OUT',
+          },
+        }),
+        prisma.payout.update({
+          where: { id: payout.id },
+          data: {
+            stripeTransferId: transfer.id,
+            status: 'PAID',
+          },
+        }),
+      ])
 
-    logger.info({
-      event: 'payout.transfer',
-      message: 'Stripe transfer created',
-      metadata: { payoutId: payout.id, userId, amountCents },
-    })
+      logger.info({
+        event: 'payout.transfer',
+        message: 'Stripe transfer created',
+        metadata: { payoutId: payout.id, userId, amountCents },
+      })
 
-    return prisma.payout.update({
-      where: { id: payout.id },
-      data: {
-        stripeTransferId: transfer.id,
-        status: 'PAID',
-      },
-    })
+      return paidPayout
+    } catch (reconciliationError) {
+      await prisma.payout.update({
+        where: { id: payout.id },
+        data: {
+          stripeTransferId: transfer.id,
+          status: 'PROCESSING',
+          metadata: {
+            reconciliationRequired: true,
+            reason: 'Transfer sent but payout reconciliation is pending',
+          },
+        },
+      })
+
+      throw reconciliationError
+    }
   } catch (error) {
-    await prisma.payout.update({
-      where: { id: payout.id },
-      data: {
-        status: 'FAILED',
-        metadata: { reason: error instanceof Error ? error.message : 'Unknown payout failure' },
-      },
-    })
+    if (!transferSent) {
+      await prisma.payout.update({
+        where: { id: payout.id },
+        data: {
+          status: 'FAILED',
+          metadata: {
+            reason: getSafePayoutErrorMessage(error),
+          },
+        },
+      })
+    }
 
     throw error
   }

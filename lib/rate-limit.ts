@@ -10,11 +10,22 @@ type Bucket = {
 }
 
 const buckets = new Map<string, Bucket>()
+let cleanupCounter = 0
 
 // In-memory limiter for local/single-instance usage.
 // For multi-instance production deployments, replace with a shared store (e.g. Redis).
 export function checkRateLimit({ key, limit, windowMs }: LimitOptions) {
   const now = Date.now()
+
+  cleanupCounter += 1
+  if (cleanupCounter % 100 === 0) {
+    for (const [bucketKey, bucket] of buckets.entries()) {
+      if (bucket.resetAt <= now) {
+        buckets.delete(bucketKey)
+      }
+    }
+  }
+
   const existing = buckets.get(key)
 
   if (!existing || existing.resetAt <= now) {

@@ -5,7 +5,11 @@ import { logger } from '@/lib/logger'
 const stripeKey = env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder'
 
 if (!env.STRIPE_SECRET_KEY) {
-  if (process.env.NODE_ENV === 'production') {
+  const isProductionRuntime =
+    process.env.NODE_ENV === 'production' &&
+    process.env.NEXT_PHASE !== 'phase-production-build'
+
+  if (isProductionRuntime) {
     throw new Error('Missing required environment variable: STRIPE_SECRET_KEY')
   }
 
@@ -15,4 +19,6 @@ if (!env.STRIPE_SECRET_KEY) {
   })
 }
 
-export const stripe = new Stripe(stripeKey)
+export const stripe = new Stripe(stripeKey, {
+  apiVersion: '2026-04-22.dahlia',
+})
