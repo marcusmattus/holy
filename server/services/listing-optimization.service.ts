@@ -12,10 +12,15 @@ export async function optimizeListing(listingId: string) {
   const views = listing.views || 0
   const installs = listing.installs || 0
   const conversionRate = views > 0 ? installs / views : 0
+  const improvementSuffix =
+    'Built for quick setup, measurable outcomes, and repeatable growth loops.'
+  const improvedDescription = listing.description.includes(improvementSuffix)
+    ? listing.description
+    : `${listing.description} ${improvementSuffix}`
 
   return {
     improvedTitle: listing.title || `${listing.name} for modern teams`,
-    improvedDescription: `${listing.description} Built for quick setup, measurable outcomes, and repeatable growth loops.`,
+    improvedDescription,
     suggestedCategory: listing.category || 'Productivity',
     pricingSuggestion:
       typeof listing.price === 'number' && listing.price > 0

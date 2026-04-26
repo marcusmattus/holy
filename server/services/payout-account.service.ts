@@ -6,11 +6,11 @@ async function ensureUser(userId: string) {
   await prisma.user.upsert({
     where: { id: userId },
     update: {
-      email: `${userId}@example.com`,
+      email: `${userId}@internal.holy.local`,
     },
     create: {
       id: userId,
-      email: `${userId}@example.com`,
+      email: `${userId}@internal.holy.local`,
     },
   })
 }
