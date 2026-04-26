@@ -24,7 +24,7 @@ export function AIAssistant({ projectId }: { projectId: string }) {
     <div className="w-80 flex-shrink-0 flex flex-col border-l border-border bg-card/50 backdrop-blur-xl relative">
       {/* Ethereal background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#C9A24A]/5 via-transparent to-transparent pointer-events-none" />
-      
+
       <div className="px-4 py-3 border-b border-border/50 flex items-center space-x-2 relative z-10">
         <Sparkles className="w-4 h-4 text-[#C9A24A]" />
         <span className="text-xs font-bold tracking-widest uppercase text-[#C9A24A]">
@@ -44,7 +44,7 @@ export function AIAssistant({ projectId }: { projectId: string }) {
           </div>
         )}
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-3 space-y-3 relative z-10">
         {messages.map((msg: Message) => (
           <div
@@ -64,11 +64,13 @@ export function AIAssistant({ projectId }: { projectId: string }) {
                 {msg.role === 'assistant' ? 'Holy' : 'You'}
               </span>
             </div>
-            <div className="leading-relaxed whitespace-pre-wrap">{msg.content}</div>
+            <div className="leading-relaxed whitespace-pre-wrap">
+              {msg.content}
+            </div>
           </div>
         ))}
       </div>
-      
+
       <div className="p-3 border-t border-border/50 relative z-10">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <div className="relative flex-1 group">

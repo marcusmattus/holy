@@ -7,10 +7,7 @@ type RouteContext = {
 }
 
 // GET /api/projects/[id] - Get a single project
-export async function GET(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
 
@@ -23,11 +20,11 @@ export async function GET(
             name: true,
             email: true,
             avatarUrl: true,
-          }
+          },
         },
         versions: {
           orderBy: { createdAt: 'desc' },
-          take: 10
+          take: 10,
         },
         storeEntry: {
           include: {
@@ -38,22 +35,19 @@ export async function GET(
                     id: true,
                     name: true,
                     avatarUrl: true,
-                  }
-                }
+                  },
+                },
               },
               orderBy: { createdAt: 'desc' },
-              take: 5
-            }
-          }
-        }
-      }
+              take: 5,
+            },
+          },
+        },
+      },
     })
 
     if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     return NextResponse.json({ project })
@@ -61,30 +55,24 @@ export async function GET(
     console.error('Error fetching project:', error)
     return NextResponse.json(
       { error: 'Failed to fetch project' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
 
 // PATCH /api/projects/[id] - Update a project
-export async function PATCH(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
-    const body = await request.json() as UpdateProjectInput
+    const body = (await request.json()) as UpdateProjectInput
 
     // Check if project exists and get current user
     const existingProject = await prisma.project.findUnique({
-      where: { id }
+      where: { id },
     })
 
     if (!existingProject) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     // TODO: Check if user owns this project (from auth session)
@@ -102,9 +90,9 @@ export async function PATCH(
             name: true,
             email: true,
             avatarUrl: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     return NextResponse.json({ project })
@@ -112,47 +100,41 @@ export async function PATCH(
     console.error('Error updating project:', error)
     return NextResponse.json(
       { error: 'Failed to update project' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
 
 // DELETE /api/projects/[id] - Delete a project
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
 
     // Check if project exists
     const existingProject = await prisma.project.findUnique({
-      where: { id }
+      where: { id },
     })
 
     if (!existingProject) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     // TODO: Check if user owns this project (from auth session)
 
     // Delete project (cascade will handle versions and store entry)
     await prisma.project.delete({
-      where: { id }
+      where: { id },
     })
 
     return NextResponse.json(
       { message: 'Project deleted successfully' },
-      { status: 200 }
+      { status: 200 },
     )
   } catch (error) {
     console.error('Error deleting project:', error)
     return NextResponse.json(
       { error: 'Failed to delete project' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

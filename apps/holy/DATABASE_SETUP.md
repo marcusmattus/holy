@@ -11,6 +11,7 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 ### Models Implemented
 
 #### **User**
+
 - `id` - Unique identifier (cuid)
 - `email` - Unique email address
 - `name` - Display name (optional)
@@ -21,6 +22,7 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 - Relations: `projects[]`, `reviews[]`
 
 #### **Project**
+
 - `id` - Unique identifier (cuid)
 - `name` - Project name
 - `slug` - URL-friendly identifier (unique)
@@ -36,6 +38,7 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 - Relations: `user`, `versions[]`, `storeEntry`
 
 #### **ProjectVersion**
+
 - `id` - Unique identifier (cuid)
 - `projectId` - Parent project reference
 - `snapshot` - Serialized editor state (JSON string)
@@ -44,6 +47,7 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 - Relations: `project`
 
 #### **StoreEntry**
+
 - `id` - Unique identifier (cuid)
 - `projectId` - Associated project (unique)
 - `status` - Review status (DRAFT | IN_REVIEW | PUBLISHED | REJECTED)
@@ -58,6 +62,7 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 - Relations: `project`, `reviews[]`
 
 #### **Review**
+
 - `id` - Unique identifier (cuid)
 - `storeEntryId` - Store entry reference
 - `userId` - Reviewer reference
@@ -73,28 +78,27 @@ The Holy platform database has been successfully configured using **Prisma 7** w
 The database has been populated with realistic mock data:
 
 ### Users (2)
+
 - **Alice Johnson** (`alice@holysticlabs.com`)
   - Plan: PRO
   - Wallet: `0x1234567890abcdef1234567890abcdef12345678`
   - Avatar: Dicebear avatar
-  
 - **Bob Smith** (`bob@example.com`)
   - Plan: FREE
   - Avatar: Dicebear avatar
 
 ### Projects (3)
+
 1. **Holy Commerce** (Alice)
    - Category: E-commerce
    - Status: Published
    - Price: $49.99
    - Tech: Next.js, Stripe, Tailwind
    - Deploy URL: `https://holy-commerce.holy.app`
-   
 2. **Neon Dashboard** (Alice)
    - Category: SaaS
    - Status: Draft
    - Tech: React, Recharts, Tailwind
-   
 3. **Launch Page v2** (Bob)
    - Category: Portfolio
    - Status: Published
@@ -103,17 +107,18 @@ The database has been populated with realistic mock data:
    - Deploy URL: `https://launch-v2.holy.app`
 
 ### Project Versions (3)
+
 - Holy Commerce v1.0 ("Initial release")
 - Holy Commerce v1.1 ("Added checkout flow")
 - Neon Dashboard v0.1 ("Work in progress")
 
 ### Store Entries (2)
+
 - **Holy Commerce**
   - Status: PUBLISHED
   - Installs: 127
   - Rating: 4.8 ⭐ (23 reviews)
   - Published: March 15, 2026
-  
 - **Launch Page v2**
   - Status: PUBLISHED
   - Installs: 84
@@ -121,6 +126,7 @@ The database has been populated with realistic mock data:
   - Published: April 1, 2026
 
 ### Reviews (2)
+
 - Bob → Holy Commerce: 5 stars
 - Alice → Launch Page v2: 4 stars
 
@@ -168,16 +174,16 @@ apps/holy/
 
 ### Separation of Concerns
 
-| Data Type | Stored In | Purpose |
-|-----------|-----------|---------|
-| **User profile** | Holy DB | Email, name, avatar, plan |
-| **User identity** | HolyOS | Auth, sessions, permissions |
-| **Project metadata** | Holy DB | Name, slug, versions, store listing |
-| **Project analytics** | HolyOS | Views, visitors, conversions |
-| **Store listings** | Holy DB | Descriptions, screenshots, reviews |
-| **Revenue tracking** | HolyOS | Earnings, payouts, transactions |
-| **On-chain rewards** | HolyOS | Protocol distribution, claims |
-| **Ad campaigns** | HolyOS | Impressions, clicks, revenue |
+| Data Type             | Stored In | Purpose                             |
+| --------------------- | --------- | ----------------------------------- |
+| **User profile**      | Holy DB   | Email, name, avatar, plan           |
+| **User identity**     | HolyOS    | Auth, sessions, permissions         |
+| **Project metadata**  | Holy DB   | Name, slug, versions, store listing |
+| **Project analytics** | HolyOS    | Views, visitors, conversions        |
+| **Store listings**    | Holy DB   | Descriptions, screenshots, reviews  |
+| **Revenue tracking**  | HolyOS    | Earnings, payouts, transactions     |
+| **On-chain rewards**  | HolyOS    | Protocol distribution, claims       |
+| **Ad campaigns**      | HolyOS    | Impressions, clicks, revenue        |
 
 ### Data Flow Example
 
@@ -196,7 +202,7 @@ const project = await prisma.project.create({
   data: {
     name: 'My Awesome App',
     slug: 'my-awesome-app',
-    holyosProjectId: holyosProject.id,  // 👈 Link the two
+    holyosProjectId: holyosProject.id, // 👈 Link the two
     userId: currentUser.id,
   },
 })
@@ -207,7 +213,9 @@ const project = await prisma.project.create({
 ## 🔄 Next Steps
 
 ### API Routes (Recommended Next)
+
 Create CRUD endpoints:
+
 - `POST /api/projects` - Create project
 - `GET /api/projects` - List user projects
 - `GET /api/projects/[id]` - Get project details
@@ -218,7 +226,9 @@ Create CRUD endpoints:
 - `POST /api/store/[id]/reviews` - Add review
 
 ### UI Components
+
 Build forms and displays:
+
 - New project wizard (`/dashboard/projects/new`)
 - Project list view (`/dashboard/projects`)
 - Store submission form (`/dashboard/store/submit`)
@@ -229,11 +239,13 @@ Build forms and displays:
 ## 🐛 Troubleshooting
 
 ### Regenerate Prisma Client
+
 ```bash
 npx prisma generate
 ```
 
 ### Reset Database
+
 ```bash
 rm -f dev.db
 npx prisma migrate dev
@@ -241,12 +253,14 @@ pnpm db:seed
 ```
 
 ### View Database in Browser
+
 ```bash
 pnpm db:studio
 # Opens http://localhost:5555
 ```
 
 ### SQLite CLI
+
 ```bash
 sqlite3 dev.db
 sqlite> .tables

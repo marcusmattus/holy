@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort') || 'installs'
 
     const where: any = {
-      status: 'PUBLISHED'
+      status: 'PUBLISHED',
     }
 
     if (category) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { project: { name: { contains: search, mode: 'insensitive' } } },
-        { longDescription: { contains: search, mode: 'insensitive' } }
+        { longDescription: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -40,11 +40,11 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 avatarUrl: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     })
 
     return NextResponse.json({ entries })
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching store entries:', error)
     return NextResponse.json(
       { error: 'Failed to fetch store entries' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
@@ -66,29 +66,26 @@ export async function POST(request: NextRequest) {
     if (!projectId) {
       return NextResponse.json(
         { error: 'Project ID is required' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     const project = await prisma.project.findUnique({
-      where: { id: projectId }
+      where: { id: projectId },
     })
 
     if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     const existingEntry = await prisma.storeEntry.findUnique({
-      where: { projectId }
+      where: { projectId },
     })
 
     if (existingEntry) {
       return NextResponse.json(
         { error: 'Project already submitted to store' },
-        { status: 409 }
+        { status: 409 },
       )
     }
 
@@ -109,11 +106,11 @@ export async function POST(request: NextRequest) {
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     })
 
     return NextResponse.json({ entry }, { status: 201 })
@@ -121,7 +118,7 @@ export async function POST(request: NextRequest) {
     console.error('Error submitting to store:', error)
     return NextResponse.json(
       { error: 'Failed to submit to store' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

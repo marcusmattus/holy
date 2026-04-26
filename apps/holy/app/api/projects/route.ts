@@ -10,27 +10,24 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') // Temporary: will come from auth
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
     const projects = await prisma.project.findMany({
       where: { userId },
       include: {
         _count: {
-          select: { versions: true }
+          select: { versions: true },
         },
         storeEntry: {
           select: {
             status: true,
             installs: true,
             avgRating: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { updatedAt: 'desc' },
     })
 
     return NextResponse.json({ projects })
@@ -38,7 +35,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching projects:', error)
     return NextResponse.json(
       { error: 'Failed to fetch projects' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
@@ -46,26 +43,28 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create a new project
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as CreateProjectInput & { userId: string }
-    
+    const body = (await request.json()) as CreateProjectInput & {
+      userId: string
+    }
+
     const { name, slug, description, category, userId, holyosProjectId } = body
 
     if (!name || !slug || !userId) {
       return NextResponse.json(
         { error: 'Name, slug, and userId are required' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     // Check if slug is already taken
     const existingProject = await prisma.project.findUnique({
-      where: { slug }
+      where: { slug },
     })
 
     if (existingProject) {
       return NextResponse.json(
         { error: 'Project with this slug already exists' },
-        { status: 409 }
+        { status: 409 },
       )
     }
 
@@ -85,9 +84,9 @@ export async function POST(request: NextRequest) {
             name: true,
             email: true,
             avatarUrl: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     return NextResponse.json({ project }, { status: 201 })
@@ -95,7 +94,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating project:', error)
     return NextResponse.json(
       { error: 'Failed to create project' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -14,11 +14,9 @@ This document describes the integration of the "Ethereal IDE" design system into
 ### Color Palette
 
 ```css
---gold: #C9A24A
---gold-muted: rgba(201, 162, 74, 0.1)
---bg-base: #0a0a0a
---card-bg: rgba(255, 255, 255, 0.03)
---border-subtle: rgba(255, 255, 255, 0.08)
+--gold: #c9a24a --gold-muted: rgba(201, 162, 74, 0.1) --bg-base: #0a0a0a
+  --card-bg: rgba(255, 255, 255, 0.03)
+  --border-subtle: rgba(255, 255, 255, 0.08);
 ```
 
 ### Typography
@@ -42,9 +40,7 @@ Creates atmospheric depth with radial gradients and noise texture.
 ### 2. Glass Panels
 
 ```tsx
-<div className="glass-panel">
-  {/* Content */}
-</div>
+<div className="glass-panel">{/* Content */}</div>
 ```
 
 Semi-transparent containers with subtle borders and backdrop blur.
@@ -60,9 +56,7 @@ Animated gold pulse for active/live status indicators.
 ### 4. Gold Glow Effects
 
 ```tsx
-<button className="bg-[#C9A24A] gold-glow">
-  Deploy
-</button>
+<button className="bg-[#C9A24A] gold-glow">Deploy</button>
 ```
 
 Soft shadow effect for primary actions.
@@ -236,6 +230,7 @@ Original design HTML files are preserved in `/Users/marcusmattus/Downloads/holyu
 ## Support
 
 For questions about the design system integration:
+
 - Review the design documentation at `/holydesign.md`
 - Check the original HTML mockups in `/Downloads/holyui/`
 - Refer to Tailwind CSS documentation for utility classes

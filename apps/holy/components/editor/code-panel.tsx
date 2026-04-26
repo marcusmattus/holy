@@ -41,7 +41,7 @@ export function CodePanel() {
     <div className="w-[420px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-xl relative">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#C9A24A]/5 via-transparent to-transparent pointer-events-none" />
-      
+
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-black/40 backdrop-blur-md relative z-10">
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
@@ -56,7 +56,7 @@ export function CodePanel() {
           AI Generated
         </div>
       </div>
-      
+
       <textarea
         value={code}
         onChange={(e) => setCode(e.target.value)}
@@ -66,11 +66,14 @@ export function CodePanel() {
         }}
         spellCheck={false}
       />
-      
+
       {/* Line numbers overlay (optional enhancement) */}
       <div className="absolute left-0 top-16 bottom-0 w-12 bg-black/20 border-r border-white/5 flex flex-col text-[10px] font-mono text-white/20 pt-4 pointer-events-none select-none">
         {code.split('\n').map((_, i) => (
-          <div key={i} className="h-[1.4rem] flex items-center justify-end pr-2">
+          <div
+            key={i}
+            className="h-[1.4rem] flex items-center justify-end pr-2"
+          >
             {i + 1}
           </div>
         ))}

@@ -41,14 +41,18 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Key Pages
 
 ### Projects Hub
+
 **URL**: `/dashboard/projects`
+
 - View all projects in grid layout
 - Create new projects
 - See project status with live indicators
 - Access project details
 
 ### Editor Workspace
+
 **URL**: `/dashboard/projects/[projectId]/editor`
+
 - **Left Panel**: Code editor with syntax highlighting
 - **Center Panel**: Live preview with responsive viewports
 - **Right Panel**: AI assistant for code generation
@@ -63,20 +67,22 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Design System Usage
 
 ### Ethereal Background
+
 Always add to full-page layouts:
+
 ```tsx
 <div className="ethereal-bg" />
 <div className="grain" />
 ```
 
 ### Glass Panel Cards
+
 ```tsx
-<div className="glass-panel rounded-3xl p-6">
-  {/* Content */}
-</div>
+<div className="glass-panel rounded-3xl p-6">{/* Content */}</div>
 ```
 
 ### Primary Button
+
 ```tsx
 <button className="bg-[#C9A24A] text-black px-6 py-3 rounded-2xl font-bold gold-glow">
   Deploy
@@ -84,6 +90,7 @@ Always add to full-page layouts:
 ```
 
 ### Status Indicator
+
 ```tsx
 <div className="flex items-center space-x-2">
   <div className="status-pulse" />
@@ -98,16 +105,19 @@ Always add to full-page layouts:
 Try these in the AI assistant:
 
 1. **Simple Component**:
+
    ```
    Create a card component with a title and description
    ```
 
 2. **With Styling**:
+
    ```
    Build a pricing table with 3 tiers using glass panels and gold accents
    ```
 
 3. **Interactive Element**:
+
    ```
    Make a button with hover animation and gold glow effect
    ```
@@ -130,20 +140,24 @@ Click icons in top toolbar to switch between views.
 ## Troubleshooting
 
 ### API Key Not Working
+
 - Verify key format: `sk-...`
 - Check OpenAI dashboard for key status
 - Ensure key has API access enabled
 
 ### Styles Not Loading
+
 - Clear Next.js cache: `rm -rf .next`
 - Restart dev server: `npm run dev`
 - Check browser console for errors
 
 ### TypeScript Errors
+
 - Run type check: `npm run type-check`
 - Rebuild: `npm run build`
 
 ### AI Not Responding
+
 - Check network tab for API calls
 - Verify `/api/ai/chat` route is accessible
 - Check OpenAI API status
@@ -151,21 +165,22 @@ Click icons in top toolbar to switch between views.
 ## Design System Reference
 
 ### Colors
+
 ```css
---gold: #C9A24A              /* Primary accent */
---gold-muted: rgba(201, 162, 74, 0.1)
---bg-base: #0a0a0a           /* Background */
---card-bg: rgba(255, 255, 255, 0.03)  /* Glass */
---border-subtle: rgba(255, 255, 255, 0.08)
+--gold: #c9a24a /* Primary accent */ --gold-muted: rgba(201, 162, 74, 0.1)
+  --bg-base: #0a0a0a /* Background */ --card-bg: rgba(255, 255, 255, 0.03)
+  /* Glass */ --border-subtle: rgba(255, 255, 255, 0.08);
 ```
 
 ### Typography
+
 ```css
 font-family: 'Space Grotesk', sans-serif
 weights: 300, 400, 500, 600, 700
 ```
 
 ### Animations
+
 - `streaming-dot`: AI loading animation
 - `status-pulse`: Live indicator pulse
 - `shimmer`: Card hover effect
@@ -174,6 +189,7 @@ weights: 300, 400, 500, 600, 700
 ## Common Tasks
 
 ### Add New Project Card
+
 ```tsx
 <div className="glass-panel shimmer rounded-3xl p-6">
   <h3 className="text-xl font-bold">{project.name}</h3>
@@ -183,22 +199,22 @@ weights: 300, 400, 500, 600, 700
 ```
 
 ### Create AI Chat Interface
+
 ```tsx
 import { useChat } from 'ai/react'
 
 const { messages, input, handleSubmit } = useChat({
-  api: '/api/ai/chat'
+  api: '/api/ai/chat',
 })
 ```
 
 ### Add Ethereal Effect
+
 ```tsx
 <div className="relative">
   <div className="ethereal-bg" />
   <div className="grain" />
-  <div className="relative z-10">
-    {/* Your content */}
-  </div>
+  <div className="relative z-10">{/* Your content */}</div>
 </div>
 ```
 
@@ -241,6 +257,7 @@ vercel --prod
 ## Support
 
 Issues or questions? Check:
+
 1. `INTEGRATION_SUMMARY.md` for overview
 2. `DESIGN_INTEGRATION.md` for detailed docs
 3. Original HTML mockups for design reference

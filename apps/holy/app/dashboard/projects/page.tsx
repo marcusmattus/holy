@@ -102,9 +102,7 @@ export default function ProjectsPage() {
               <div className="flex items-center space-x-2 bg-black/40 px-3 py-1 rounded-full border border-white/5">
                 <div
                   className={`w-1.5 h-1.5 rounded-full ${
-                    project.status === 'active'
-                      ? 'status-pulse'
-                      : 'bg-white/20'
+                    project.status === 'active' ? 'status-pulse' : 'bg-white/20'
                   }`}
                 />
                 <span className="text-[10px] font-bold uppercase tracking-tighter">
@@ -128,9 +126,7 @@ export default function ProjectsPage() {
                 Updated {project.updated}
               </span>
               <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-sm font-bold text-[#C9A24A]">
-                  Open →
-                </span>
+                <span className="text-sm font-bold text-[#C9A24A]">Open →</span>
               </div>
             </div>
           </Link>

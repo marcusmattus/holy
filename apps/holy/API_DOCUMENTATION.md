@@ -9,6 +9,7 @@ RESTful API endpoints for managing projects, store entries, and reviews in the H
 ## 🔐 Authentication
 
 **Status:** Not yet implemented
+
 - Add authentication middleware to protect routes
 - Extract `userId` from session instead of query parameters
 - Implement ownership checks for update/delete operations
@@ -20,13 +21,16 @@ RESTful API endpoints for managing projects, store entries, and reviews in the H
 ## 📁 Project Routes
 
 ### `GET /api/projects`
+
 List all projects for the current user.
 
 **Query Parameters:**
-- `userId` (string, required*) - User ID to fetch projects for
-  - *Will come from auth session in production
+
+- `userId` (string, required\*) - User ID to fetch projects for
+  - \*Will come from auth session in production
 
 **Response:** `200 OK`
+
 ```json
 {
   "projects": [
@@ -59,15 +63,18 @@ List all projects for the current user.
 ```
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing userId
 - `500 Internal Server Error` - Database error
 
 ---
 
 ### `POST /api/projects`
+
 Create a new project.
 
 **Request Body:**
+
 ```json
 {
   "name": "My Awesome App",
@@ -80,6 +87,7 @@ Create a new project.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "project": {
@@ -98,6 +106,7 @@ Create a new project.
 ```
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing required fields
 - `409 Conflict` - Slug already exists
 - `500 Internal Server Error` - Database error
@@ -105,12 +114,15 @@ Create a new project.
 ---
 
 ### `GET /api/projects/[id]`
+
 Get a single project with full details.
 
 **Path Parameters:**
+
 - `id` (string, required) - Project ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "project": {
@@ -160,18 +172,22 @@ Get a single project with full details.
 ```
 
 **Error Responses:**
+
 - `404 Not Found` - Project doesn't exist
 - `500 Internal Server Error` - Database error
 
 ---
 
 ### `PATCH /api/projects/[id]`
+
 Update a project.
 
 **Path Parameters:**
+
 - `id` (string, required) - Project ID
 
 **Request Body:** (all fields optional)
+
 ```json
 {
   "name": "Updated Name",
@@ -183,6 +199,7 @@ Update a project.
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "project": {
@@ -192,6 +209,7 @@ Update a project.
 ```
 
 **Error Responses:**
+
 - `404 Not Found` - Project doesn't exist
 - `403 Forbidden` - User doesn't own project (when auth is added)
 - `500 Internal Server Error` - Database error
@@ -199,12 +217,15 @@ Update a project.
 ---
 
 ### `DELETE /api/projects/[id]`
+
 Delete a project (cascades to versions and store entry).
 
 **Path Parameters:**
+
 - `id` (string, required) - Project ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "message": "Project deleted successfully"
@@ -212,6 +233,7 @@ Delete a project (cascades to versions and store entry).
 ```
 
 **Error Responses:**
+
 - `404 Not Found` - Project doesn't exist
 - `403 Forbidden` - User doesn't own project (when auth is added)
 - `500 Internal Server Error` - Database error
@@ -221,12 +243,15 @@ Delete a project (cascades to versions and store entry).
 ## 📦 Version Routes
 
 ### `GET /api/projects/[id]/versions`
+
 List all versions for a project.
 
 **Path Parameters:**
+
 - `id` (string, required) - Project ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "versions": [
@@ -244,12 +269,15 @@ List all versions for a project.
 ---
 
 ### `POST /api/projects/[id]/versions`
+
 Create a new version snapshot.
 
 **Path Parameters:**
+
 - `id` (string, required) - Project ID
 
 **Request Body:**
+
 ```json
 {
   "snapshot": {
@@ -262,6 +290,7 @@ Create a new version snapshot.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "version": {
@@ -275,6 +304,7 @@ Create a new version snapshot.
 ```
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing snapshot
 - `404 Not Found` - Project doesn't exist
 - `500 Internal Server Error` - Database error
@@ -284,14 +314,17 @@ Create a new version snapshot.
 ## 🏪 Store Routes
 
 ### `GET /api/store`
+
 List all published store entries.
 
 **Query Parameters:**
+
 - `category` (string, optional) - Filter by category
 - `search` (string, optional) - Search in name and description
 - `sort` (string, optional) - Sort order: `installs` (default), `rating`, `price`, `recent`
 
 **Response:** `200 OK`
+
 ```json
 {
   "entries": [
@@ -330,22 +363,22 @@ List all published store entries.
 ---
 
 ### `POST /api/store`
+
 Submit a project to the store.
 
 **Request Body:**
+
 ```json
 {
   "projectId": "project_id",
-  "screenshots": [
-    "/store/screenshot1.jpg",
-    "/store/screenshot2.jpg"
-  ],
+  "screenshots": ["/store/screenshot1.jpg", "/store/screenshot2.jpg"],
   "longDescription": "Detailed description of the project...",
   "demoUrl": "https://demo.app"
 }
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "entry": {
@@ -362,6 +395,7 @@ Submit a project to the store.
 ```
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing projectId
 - `404 Not Found` - Project doesn't exist
 - `409 Conflict` - Project already submitted
@@ -372,12 +406,15 @@ Submit a project to the store.
 ## ⭐ Review Routes
 
 ### `POST /api/store/[id]/reviews`
+
 Add a review to a store entry.
 
 **Path Parameters:**
+
 - `id` (string, required) - Store entry ID
 
 **Request Body:**
+
 ```json
 {
   "userId": "user_id",
@@ -387,6 +424,7 @@ Add a review to a store entry.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "review": {
@@ -406,10 +444,12 @@ Add a review to a store entry.
 ```
 
 **Behavior:**
+
 - Automatically updates store entry's `avgRating` and `reviewCount`
 - Recalculates average from all reviews
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing userId/rating or invalid rating (must be 1-5)
 - `404 Not Found` - Store entry doesn't exist
 - `500 Internal Server Error` - Database error
@@ -469,8 +509,8 @@ const newProject = await fetch('/api/projects', {
   body: JSON.stringify({
     name: 'Browser Test',
     slug: 'browser-test',
-    userId: 'USER_ID'
-  })
+    userId: 'USER_ID',
+  }),
 })
 const project = await newProject.json()
 console.log(project)
@@ -481,26 +521,31 @@ console.log(project)
 ## 🔄 Next Steps
 
 ### 1. Add Authentication
+
 - [ ] Integrate NextAuth.js or similar
 - [ ] Add middleware to extract userId from session
 - [ ] Implement ownership checks
 - [ ] Add role-based permissions (e.g., admin for store approval)
 
 ### 2. Add Validation
+
 - [ ] Use Zod or similar for request validation
 - [ ] Add field-level constraints
 - [ ] Sanitize user input
 
 ### 3. Add Pagination
+
 - [ ] Implement cursor-based pagination for projects list
 - [ ] Add limit/offset parameters
 - [ ] Return pagination metadata
 
 ### 4. Add Rate Limiting
+
 - [ ] Implement rate limiting per user
 - [ ] Add abuse prevention
 
 ### 5. Connect to HolyOS
+
 - [ ] Call HolyOS API when creating projects
 - [ ] Sync analytics data
 - [ ] Handle deployment triggers

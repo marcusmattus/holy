@@ -7,7 +7,7 @@ async function main() {
   })
 
   const prisma = new PrismaClient({ adapter: adapterFactory })
-  
+
   console.log('🌱 Seeding database...')
 
   // Create users
@@ -134,7 +134,10 @@ async function main() {
     data: {
       projectId: project3.id,
       status: 'PUBLISHED',
-      screenshots: JSON.stringify(['/store/launch-1.jpg', '/store/launch-2.jpg']),
+      screenshots: JSON.stringify([
+        '/store/launch-1.jpg',
+        '/store/launch-2.jpg',
+      ]),
       longDescription:
         'Eye-catching landing page template perfect for product launches. Includes hero, features, pricing, and CTA sections.',
       demoUrl: 'https://launch-v2.holy.app',
@@ -169,12 +172,11 @@ async function main() {
 
   console.log(`✅ Created reviews`)
   console.log('✨ Database seeded successfully!')
-  
+
   await prisma.$disconnect()
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error seeding database:', e)
-    process.exit(1)
-  })
+main().catch((e) => {
+  console.error('❌ Error seeding database:', e)
+  process.exit(1)
+})

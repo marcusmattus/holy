@@ -4,17 +4,21 @@ import { useState } from 'react'
 import { Monitor, Smartphone, Code2, RotateCcw } from 'lucide-react'
 
 export function PreviewPane() {
-  const [viewMode, setViewMode] = useState<'desktop' | 'mobile' | 'code'>('desktop')
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile' | 'code'>(
+    'desktop',
+  )
 
   return (
     <div className="flex-1 flex flex-col bg-[#0F0F0F] relative overflow-hidden">
       {/* Subtle ethereal gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#C9A24A]/3 via-transparent to-transparent pointer-events-none" />
-      
+
       {/* Toolbar */}
       <div className="h-10 bg-black/20 border-b border-white/5 flex items-center justify-between px-4 backdrop-blur-md relative z-10">
         <div className="flex items-center space-x-4 text-[10px] text-white/30 font-bold uppercase tracking-widest">
-          <span>Viewport: <span className="text-white">{viewMode}</span></span>
+          <span>
+            Viewport: <span className="text-white">{viewMode}</span>
+          </span>
           <span>Scale: 100%</span>
         </div>
         <div className="flex items-center space-x-1 bg-white/5 rounded-lg p-1">
@@ -71,15 +75,41 @@ export function PreviewPane() {
               // Code View
               <div className="h-full bg-[#0d0d0d] p-8 font-mono text-sm overflow-y-auto">
                 <div className="flex flex-col space-y-1 text-white/80">
-                  <p className="text-blue-400">import <span className="text-white">{'{ Card, Header }'}</span> from <span className="text-[#C9A24A]">'@holy/ui'</span>;</p>
-                  <p className="text-gray-600">// AI Generated React Component</p>
-                  <p className="text-white"><span className="text-purple-400">export default function</span> <span className="text-yellow-200">FinanceDashboard</span>() {'{'}</p>
+                  <p className="text-blue-400">
+                    import{' '}
+                    <span className="text-white">{'{ Card, Header }'}</span>{' '}
+                    from <span className="text-[#C9A24A]">'@holy/ui'</span>;
+                  </p>
+                  <p className="text-gray-600">
+                    // AI Generated React Component
+                  </p>
+                  <p className="text-white">
+                    <span className="text-purple-400">
+                      export default function
+                    </span>{' '}
+                    <span className="text-yellow-200">FinanceDashboard</span>(){' '}
+                    {'{'}
+                  </p>
                   <div className="pl-4">
-                    <p className="text-white"><span className="text-purple-400">return</span> (</p>
+                    <p className="text-white">
+                      <span className="text-purple-400">return</span> (
+                    </p>
                     <div className="pl-4">
-                      <p className="text-blue-300">&lt;main <span className="text-white">className=</span><span className="text-[#C9A24A]">"flex h-screen bg-white"</span>&gt;</p>
+                      <p className="text-blue-300">
+                        &lt;main <span className="text-white">className=</span>
+                        <span className="text-[#C9A24A]">
+                          "flex h-screen bg-white"
+                        </span>
+                        &gt;
+                      </p>
                       <div className="pl-4">
-                        <p className="text-blue-300">&lt;Header <span className="text-white">title=</span><span className="text-[#C9A24A]">"Performance"</span> /&gt;</p>
+                        <p className="text-blue-300">
+                          &lt;Header <span className="text-white">title=</span>
+                          <span className="text-[#C9A24A]">
+                            "Performance"
+                          </span>{' '}
+                          /&gt;
+                        </p>
                       </div>
                       <p className="text-blue-300">&lt;/main&gt;</p>
                     </div>
@@ -101,7 +131,7 @@ export function PreviewPane() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* App Content */}
                 <div className="flex-grow p-10 space-y-10 overflow-y-auto">
                   <div className="flex justify-between items-end">
@@ -127,7 +157,9 @@ export function PreviewPane() {
                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                         Monthly Growth
                       </span>
-                      <p className="text-2xl font-bold mt-2 text-emerald-500">+18.2%</p>
+                      <p className="text-2xl font-bold mt-2 text-emerald-500">
+                        +18.2%
+                      </p>
                     </div>
                     <div className="p-6 rounded-2xl border border-slate-100">
                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
