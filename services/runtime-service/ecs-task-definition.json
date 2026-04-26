@@ -1,0 +1,15 @@
+{
+  "family": "holy-runtime-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "runtime-service",
+      "image": "holy/runtime-service:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 3000, "protocol": "tcp" }]
+    }
+  ]
+}
