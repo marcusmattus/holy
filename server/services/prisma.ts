@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client'
 
 declare global {
-  var __holyPrisma: PrismaClient | undefined
+  var __prismaClient: PrismaClient | undefined
 }
 
-export const prisma = global.__holyPrisma ?? new PrismaClient()
+export const prisma = global.__prismaClient ?? new PrismaClient()
 
 if (process.env.NODE_ENV !== 'production') {
-  global.__holyPrisma = prisma
+  global.__prismaClient = prisma
 }

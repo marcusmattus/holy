@@ -20,7 +20,6 @@ const ALWAYS_APPROVAL_TYPES = new Set<WorkflowStepType>([
   WorkflowStepType.DEPLOY_PRODUCTION,
   WorkflowStepType.UPDATE_LISTING,
 ])
-const PATCH_FALLBACK_TEXT = 'auto patch'
 
 export function requiresApprovalForStep(
   step: WorkflowDefinitionStep,
@@ -112,9 +111,8 @@ export async function runWorkflow(
     if (!requiresApproval && step.type === WorkflowStepType.APPLY_PATCH) {
       const projectId =
         typeof step.input?.projectId === 'string' ? step.input.projectId : null
-      const patch =
-        typeof step.input?.patch === 'string' ? step.input.patch : PATCH_FALLBACK_TEXT
-      if (projectId) {
+      const patch = typeof step.input?.patch === 'string' ? step.input.patch : null
+      if (projectId && patch) {
         await prisma.projectVersion.create({
           data: { projectId, code: patch },
         })
