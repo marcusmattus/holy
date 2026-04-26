@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         rule.basisPoints >= 0
     )
 
-  const totalBps = parsedRules.reduce((sum: number, rule: IncomingRule) => sum + rule.basisPoints, 0)
+  const totalBps = parsedRules.reduce((sum, rule) => sum + rule.basisPoints, 0)
   if (totalBps > 10000) {
     return NextResponse.json(
       { error: 'Revenue share basis points cannot exceed 10000' },

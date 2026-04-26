@@ -79,6 +79,7 @@ export async function allocateRevenueShares(input: { purchaseId: string }) {
     const creatorIndex = allocations.findIndex(
       (allocation) => allocation.rule.role === 'CREATOR'
     )
+    // Fallback to the first rule so the full purchase amount is always represented.
     const targetIndex = creatorIndex >= 0 ? creatorIndex : 0
     allocations[targetIndex].amountCents += remainder
   }
