@@ -8,10 +8,55 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                    String                   @id @default(cuid())
+  email                 String                   @unique
+  projects              Project[]
+  workflows             Workflow[]
+  agentListings         AgentListing[]
+  workspacesOwned       Workspace[]              @relation("WorkspaceOwner")
+  workspaceMemberships  WorkspaceMembership[]
+  agentOrchestrations   AgentOrchestration[]
+  workflowTemplates     WorkflowTemplate[]
+  templateInstalls      WorkflowTemplateInstall[]
+  agentSubscriptions    AgentSubscription[]
+  agentUsageCharges     AgentUsageCharge[]
+  auditLogins           EnterpriseLoginAudit[]
+  createdAt             DateTime                 @default(now())
+}
+
+model Workspace {
+  id                        String                         @id @default(cuid())
+  slug                      String                         @unique
+  name                      String
+  ownerId                   String
+  owner                     User                           @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  emailDomain               String?
+  workflows                 Workflow[]
+  memberships               WorkspaceMembership[]
+  orchestrations            AgentOrchestration[]
+  workflowTemplateInstalls  WorkflowTemplateInstall[]
+  subscriptions             AgentSubscription[]
+  usageCharges              AgentUsageCharge[]
+  whiteLabelSites           WhiteLabelSite[]
+  exportDestinations        ExportDestination[]
+  experiments               Experiment[]
+  integrations              WorkspaceIntegration[]
+  enterpriseConnection      EnterpriseConnection?
+  enterpriseLoginAudits     EnterpriseLoginAudit[]
+  createdAt                 DateTime                       @default(now())
+  updatedAt                 DateTime                       @updatedAt
+}
+
+model WorkspaceMembership {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String    @default("MEMBER")
+  createdAt   DateTime  @default(now())
+
+  @@unique([workspaceId, userId])
 }
 
 model Project {
@@ -51,4 +96,389 @@ model Deployment {
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model Workflow {
+  id          String                    @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?                @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  ownerId     String
+  owner       User                      @relation(fields: [ownerId], references: [id])
+  name        String
+  definition  Json
+  installs    WorkflowTemplateInstall[]
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+}
+
+model AgentListing {
+  id            String              @id @default(cuid())
+  creatorId     String
+  creator       User                @relation(fields: [creatorId], references: [id])
+  name          String
+  slug          String              @unique
+  status        AgentListingStatus  @default(PUBLISHED)
+  billingMode   PriceType           @default(FREE)
+  subscriptions AgentSubscription[]
+  usageCharges  AgentUsageCharge[]
+  revenueLedger RevenueLedgerEntry[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model AgentOrchestration {
+  id          String                    @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerId     String
+  owner       User                      @relation(fields: [ownerId], references: [id])
+  name        String
+  description String?
+  graph       Json
+  status      OrchestrationStatus       @default(ACTIVE)
+  runs        AgentOrchestrationRun[]
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+}
+
+model AgentOrchestrationRun {
+  id              String                @id @default(cuid())
+  orchestrationId String
+  orchestration   AgentOrchestration    @relation(fields: [orchestrationId], references: [id], onDelete: Cascade)
+  status          OrchestrationRunStatus @default(PENDING)
+  input           Json?
+  output          Json?
+  riskLevel       SuggestionImpact      @default(MEDIUM)
+  error           String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  messages        AgentMessage[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
+
+model AgentMessage {
+  id          String                 @id @default(cuid())
+  runId       String
+  run         AgentOrchestrationRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  fromAgentId String?
+  toAgentId   String?
+  role        AgentMessageRole
+  content     Json
+  createdAt   DateTime               @default(now())
+}
+
+model WorkflowTemplate {
+  id          String                    @id @default(cuid())
+  creatorId   String
+  creator     User                      @relation(fields: [creatorId], references: [id])
+  title       String
+  slug        String                    @unique
+  description String
+  category    String?
+  definition  Json
+  priceType   PriceType                 @default(FREE)
+  priceCents  Int                       @default(0)
+  status      TemplateStatus            @default(DRAFT)
+  installs    WorkflowTemplateInstall[]
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+}
+
+model WorkflowTemplateInstall {
+  id          String            @id @default(cuid())
+  templateId  String
+  template    WorkflowTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  workspace   Workspace?        @relation(fields: [workspaceId], references: [id])
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  workflowId  String
+  workflow    Workflow          @relation(fields: [workflowId], references: [id])
+  createdAt   DateTime          @default(now())
+}
+
+model AgentSubscription {
+  id                   String                     @id @default(cuid())
+  agentListingId       String
+  agentListing         AgentListing               @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  subscriberId         String
+  subscriber           User                       @relation(fields: [subscriberId], references: [id])
+  workspaceId          String?
+  workspace            Workspace?                 @relation(fields: [workspaceId], references: [id])
+  stripeSubscriptionId String?                    @unique
+  status               CreatorSubscriptionStatus  @default(ACTIVE)
+  priceCents           Int
+  currency             String                     @default("gbp")
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+}
+
+model AgentUsageCharge {
+  id             String          @id @default(cuid())
+  agentListingId String
+  agentListing   AgentListing    @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  workspaceId    String?
+  workspace      Workspace?      @relation(fields: [workspaceId], references: [id])
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  quantity       Int
+  unitAmountCents Int
+  totalCents     Int
+  status         PurchaseStatus  @default(PENDING)
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model RevenueLedgerEntry {
+  id               String        @id @default(cuid())
+  agentListingId   String
+  agentListing     AgentListing  @relation(fields: [agentListingId], references: [id], onDelete: Cascade)
+  sourceType       String
+  sourceId         String
+  beneficiaryType  String
+  beneficiaryId    String?
+  amountCents      Int
+  bps              Int
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+}
+
+model EnterpriseConnection {
+  id             String    @id @default(cuid())
+  workspaceId    String    @unique
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider       String    @default("OIDC")
+  issuerUrl      String
+  clientId       String
+  clientSecret   String
+  allowedDomain  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model EnterpriseLoginAudit {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email       String
+  ipAddress   String?
+  userAgent   String?
+  event       String
+  createdAt   DateTime  @default(now())
+}
+
+model WhiteLabelSite {
+  id             String                         @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace                      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name           String
+  verifications  WhiteLabelDomainVerification[]
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+}
+
+model WhiteLabelDomainVerification {
+  id               String                  @id @default(cuid())
+  whiteLabelSiteId String
+  whiteLabelSite   WhiteLabelSite          @relation(fields: [whiteLabelSiteId], references: [id], onDelete: Cascade)
+  domain           String                  @unique
+  txtRecordName    String
+  txtRecordValue   String
+  status           DomainVerificationStatus @default(PENDING)
+  verifiedAt       DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+}
+
+model ExportDestination {
+  id          String                  @id @default(cuid())
+  workspaceId String
+  workspace   Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  type        ExportDestinationType
+  name        String
+  config      Json
+  status      ExportDestinationStatus @default(ACTIVE)
+  jobs        ExportJob[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
+
+model ExportJob {
+  id            String         @id @default(cuid())
+  destinationId String
+  destination   ExportDestination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  status        ExportJobStatus @default(PENDING)
+  payload       Json?
+  error         String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Experiment {
+  id          String                @id @default(cuid())
+  workspaceId String
+  workspace   Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  variants    Json
+  status      ExperimentStatus      @default(DRAFT)
+  exposures   ExperimentExposure[]
+  results     ExperimentResult[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model ExperimentExposure {
+  id           String     @id @default(cuid())
+  experimentId String
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  sessionId    String
+  variantKey   String
+  createdAt    DateTime   @default(now())
+
+  @@unique([experimentId, sessionId])
+}
+
+model ExperimentResult {
+  id           String     @id @default(cuid())
+  experimentId String
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  variantKey   String
+  metric       String
+  value        Float
+  sampleSize   Int
+  createdAt    DateTime   @default(now())
+}
+
+model IntegrationListing {
+  id           String             @id @default(cuid())
+  name         String
+  slug         String             @unique
+  provider     String
+  category     String
+  description  String
+  configSchema Json?
+  status       AgentListingStatus @default(PUBLISHED)
+  workspaces   WorkspaceIntegration[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model WorkspaceIntegration {
+  id                   String             @id @default(cuid())
+  workspaceId          String
+  workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  integrationListingId String
+  integrationListing   IntegrationListing @relation(fields: [integrationListingId], references: [id])
+  config               Json?
+  secretsRef           String?
+  status               AgentInstallStatus @default(ACTIVE)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+enum OrchestrationStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum OrchestrationRunStatus {
+  PENDING
+  RUNNING
+  WAITING_APPROVAL
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AgentMessageRole {
+  SYSTEM
+  AGENT
+  TOOL
+  USER
+}
+
+enum SuggestionImpact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PriceType {
+  FREE
+  ONE_TIME
+  SUBSCRIPTION
+  USAGE_BASED
+}
+
+enum TemplateStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CreatorSubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum DomainVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum ExportDestinationType {
+  WEBHOOK
+  S3
+  BIGQUERY
+  SNOWFLAKE
+}
+
+enum ExportDestinationStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+
+enum ExportJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum AgentListingStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AgentInstallStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
 }
