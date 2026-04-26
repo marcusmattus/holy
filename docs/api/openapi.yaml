@@ -1,0 +1,32 @@
+openapi: 3.1.0
+info:
+  title: Holy API
+  version: 0.13.0
+paths:
+  /api/agents/orchestrations:
+    post:
+      summary: Create orchestration
+  /api/agents/orchestrations/{orchestrationId}/run:
+    post:
+      summary: Run orchestration
+  /api/workflows:
+    post:
+      summary: Create workflow
+  /api/workflows/{workflowId}/run:
+    post:
+      summary: Run workflow
+  /api/workflow-templates/{templateId}/install:
+    post:
+      summary: Install workflow template
+  /api/integrations:
+    get:
+      summary: List integrations
+  /api/workspaces/{workspaceId}/exports:
+    post:
+      summary: Create export destination
+  /api/experiments/{experimentId}/assign:
+    post:
+      summary: Deterministically assign experiment variant
+  /api/experiments/{experimentId}/results:
+    get:
+      summary: Fetch experiment results and recommendation
