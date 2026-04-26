@@ -8,21 +8,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  projects             Project[]
+  creatorPayoutAccount CreatorPayoutAccount?
+  payouts              Payout[]
+  revenueShares        RevenueShare[]       @relation("RevenueShareRecipient")
+  rewardLedgerEntries  RewardLedger[]
+  workspacesOwned      Workspace[]          @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
+  createdAt            DateTime             @default(now())
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id                      String                    @id @default(cuid())
+  name                    String
+  userId                  String
+  user                    User                      @relation(fields: [userId], references: [id])
+  workspaceId             String?
+  workspace               Workspace?                @relation(fields: [workspaceId], references: [id])
+  versions                ProjectVersion[]
+  listings                StoreListing[]
+  deployments             Deployment[]
+  revenueShares           RevenueShare[]
+  analyticsEvents         AnalyticsEvent[]
+  analyticsDailyAggregate AnalyticsDailyAggregate[]
+  createdAt               DateTime                  @default(now())
 }
 
 model ProjectVersion {
@@ -34,21 +45,191 @@ model ProjectVersion {
 }
 
 model StoreListing {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String
-  description String
-  price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id             String           @id @default(cuid())
+  projectId      String
+  project        Project          @relation(fields: [projectId], references: [id])
+  slug           String?          @unique
+  title          String?
+  name           String
+  description    String
+  category       String?
+  price          Float?
+  installs       Int              @default(0)
+  views          Int              @default(0)
+  referralSource String?
+  isPublished    Boolean          @default(false)
+  analyticsDaily AnalyticsDailyAggregate[]
+  analyticsEvent AnalyticsEvent[]
+  createdAt      DateTime         @default(now())
 }
 
 model Deployment {
+  id         String           @id @default(cuid())
+  projectId  String
+  project    Project          @relation(fields: [projectId], references: [id])
+  provider   String           @default("simulated")
+  externalId String?
+  url        String?
+  status     DeploymentStatus @default(BUILDING)
+  logs       Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model CreatorPayoutAccount {
+  id               String              @id @default(cuid())
+  userId           String              @unique
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeAccountId  String              @unique
+  onboardingStatus PayoutAccountStatus @default(PENDING)
+  payoutsEnabled   Boolean             @default(false)
+  chargesEnabled   Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model Payout {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  amountCents      Int
+  currency         String       @default("gbp")
+  status           PayoutStatus @default(PENDING)
+  stripeTransferId String?      @unique
+  metadata         Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model RevenueShare {
+  id          String             @id @default(cuid())
+  projectId   String?
+  project     Project?           @relation(fields: [projectId], references: [id])
+  recipientId String
+  recipient   User               @relation("RevenueShareRecipient", fields: [recipientId], references: [id])
+  amountCents Int
+  status      RevenueShareStatus @default(PENDING)
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model RewardLedger {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  amountCents      Int
+  currency         String   @default("gbp")
+  description      String?
+  settlementTxHash String?
+  metadata         Json?
+  createdAt        DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id              String             @id @default(cuid())
+  projectId       String?
+  project         Project?           @relation(fields: [projectId], references: [id])
+  listingId       String?
+  listing         StoreListing?      @relation(fields: [listingId], references: [id])
+  eventType       AnalyticsEventType
+  revenueCents    Int                @default(0)
+  referralCode    String?
+  idempotencyKey  String?            @unique
+  installEventKey String?            @unique
+  purchaseEventKey String?           @unique
+  createdAt       DateTime           @default(now())
+}
+
+model AnalyticsDailyAggregate {
+  id           String   @id @default(cuid())
+  projectId    String?
+  project      Project? @relation(fields: [projectId], references: [id])
+  listingId    String?
+  listing      StoreListing? @relation(fields: [listingId], references: [id])
+  date         DateTime
+  views        Int      @default(0)
+  installs     Int      @default(0)
+  purchases    Int      @default(0)
+  revenueCents Int      @default(0)
+  referrals    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([projectId, listingId, date])
+}
+
+model Workspace {
+  id        String            @id @default(cuid())
+  name      String
+  slug      String            @unique
+  ownerId   String
+  owner     User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members   WorkspaceMember[]
+  projects  Project[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
+}
+
+model StripeWebhookEvent {
   id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  url       String
-  status    String
+  eventId   String   @unique
+  type      String
   createdAt DateTime @default(now())
+}
+
+enum PayoutAccountStatus {
+  PENDING
+  ONBOARDING
+  ACTIVE
+  RESTRICTED
+  DISABLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum RevenueShareStatus {
+  PENDING
+  AVAILABLE
+  PAID_OUT
+  CANCELLED
+}
+
+enum DeploymentStatus {
+  BUILDING
+  READY
+  FAILED
+}
+
+enum AnalyticsEventType {
+  VIEW
+  INSTALL
+  PURCHASE
+  REFERRAL
+  DEPLOYMENT_CREATED
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
 }

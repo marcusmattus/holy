@@ -40,7 +40,7 @@ export default function StudioLayout() {
     const res = await fetch('/api/deploy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId, files }),
+      body: JSON.stringify({ projectId, files, poll: true }),
     })
     const data = await res.json()
     setDeployUrl(data.url)
