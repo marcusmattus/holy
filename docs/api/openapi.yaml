@@ -1,0 +1,29 @@
+openapi: 3.1.0
+info:
+  title: Holy Phase 16 API
+  version: 16.0.0
+paths:
+  /api/admin/runtime-clusters:
+    get:
+      summary: List runtime clusters
+  /api/admin/worker-pools:
+    get:
+      summary: List worker pools
+  /api/workspaces/{workspaceId}/procurement:
+    post:
+      summary: Create or approve procurement requests
+  /api/plugins/{pluginId}/checkout:
+    post:
+      summary: Checkout plugin
+  /api/admin/incidents:
+    get:
+      summary: List incidents
+  /api/autonomy/runs:
+    get:
+      summary: List autonomy runs
+  /api/search/marketplace/ask:
+    post:
+      summary: Query AI marketplace search
+  /api/workspaces/{workspaceId}/enterprise-invoices:
+    get:
+      summary: List enterprise invoices

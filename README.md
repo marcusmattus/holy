@@ -90,3 +90,11 @@ holy/
 
 Apache 2.0 — © 2025 Holystic Labs
 
+---
+
+## Phase 16 Infrastructure Notes
+
+- Runtime cluster scaffold: `/services/runtime-service`
+- Worker autoscaling worker entrypoint: `/server/workers/autoscaler.worker.ts`
+- Settlement execution worker entrypoint: `/server/workers/settlement.worker.ts`
+- Production deployment manifests for runtime: Dockerfile, Fly, Render, ECS task definition under `/services/runtime-service`

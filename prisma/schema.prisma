@@ -8,21 +8,29 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  projects  Project[]
-  createdAt DateTime @default(now())
+  id                           String                 @id @default(cuid())
+  email                        String                 @unique
+  projects                     Project[]
+  pluginPurchases              PluginPurchase[]
+  pluginCertificationReviews   PluginCertification[]  @relation("CertificationReviewer")
+  procurementRequests          ProcurementRequest[]   @relation("ProcurementRequestedBy")
+  procurementApprovals         ProcurementRequest[]   @relation("ProcurementApprovedBy")
+  incidentUpdates              IncidentUpdate[]
+  autonomousRuns               AutonomousRun[]
+  workspacesOwned              Workspace[]
+  createdAt                    DateTime               @default(now())
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  createdAt    DateTime         @default(now())
+  id              String           @id @default(cuid())
+  name            String
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  versions        ProjectVersion[]
+  listings        StoreListing[]
+  deployments     Deployment[]
+  pluginPurchases PluginPurchase[]
+  createdAt       DateTime         @default(now())
 }
 
 model ProjectVersion {
@@ -51,4 +59,316 @@ model Deployment {
   url       String
   status    String
   createdAt DateTime @default(now())
+}
+
+model Workspace {
+  id                  String               @id @default(cuid())
+  name                String
+  ownerId             String
+  owner               User                 @relation(fields: [ownerId], references: [id])
+  procurementRequests ProcurementRequest[]
+  enterpriseInvoices  EnterpriseInvoice[]
+  autonomousRuns      AutonomousRun[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+}
+
+model RuntimeClusterNode {
+  id              String            @id @default(cuid())
+  provider        RuntimeProvider
+  region          DataRegion
+  endpoint        String            @unique
+  status          RuntimeNodeStatus @default(STARTING)
+  capacity        Int               @default(1)
+  activeJobs      Int               @default(0)
+  lastHeartbeatAt DateTime?
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model WorkerPool {
+  id              String               @id @default(cuid())
+  name            String
+  queueName       String
+  provider        RuntimeProvider
+  region          DataRegion
+  minWorkers      Int                  @default(1)
+  maxWorkers      Int                  @default(5)
+  desiredWorkers  Int                  @default(1)
+  status          WorkerPoolStatus     @default(ACTIVE)
+  lastScaledAt    DateTime?
+  metadata        Json?
+  autoscaleEvents WorkerAutoscaleEvent[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model WorkerAutoscaleEvent {
+  id           String     @id @default(cuid())
+  workerPoolId String
+  workerPool   WorkerPool @relation(fields: [workerPoolId], references: [id], onDelete: Cascade)
+  fromCount    Int
+  toCount      Int
+  reason       String
+  queueDepth   Int?
+  createdAt    DateTime   @default(now())
+}
+
+model PluginListing {
+  id               String                @id @default(cuid())
+  name             String
+  description      String?
+  amountCents      Int                   @default(0)
+  currency         String                @default("gbp")
+  isPaid           Boolean               @default(false)
+  requiresApproval Boolean               @default(false)
+  isCertified      Boolean               @default(false)
+  manifestHash     String?
+  purchases        PluginPurchase[]
+  certifications   PluginCertification[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+}
+
+model PluginPurchase {
+  id                 String         @id @default(cuid())
+  pluginId           String
+  plugin             PluginListing  @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  buyerId            String
+  buyer              User           @relation(fields: [buyerId], references: [id])
+  projectId          String?
+  project            Project?       @relation(fields: [projectId], references: [id])
+  amountCents        Int
+  currency           String         @default("gbp")
+  status             PurchaseStatus @default(PENDING)
+  stripeSessionId    String?        @unique
+  stripePaymentIntent String?       @unique
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model PluginCertification {
+  id           String              @id @default(cuid())
+  pluginId     String
+  plugin       PluginListing       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  status       CertificationStatus @default(PENDING)
+  level        CertificationLevel?
+  checks       Json?
+  reviewedById String?
+  reviewedBy   User?               @relation("CertificationReviewer", fields: [reviewedById], references: [id])
+  issuedAt     DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model ProcurementRequest {
+  id            String               @id @default(cuid())
+  workspaceId   String
+  workspace     Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requestedById String
+  requestedBy   User                 @relation("ProcurementRequestedBy", fields: [requestedById], references: [id])
+  assetType     ProcurementAssetType
+  assetId       String
+  amountCents   Int
+  currency      String               @default("gbp")
+  status        ProcurementStatus    @default(PENDING)
+  approvedById  String?
+  approvedBy    User?                @relation("ProcurementApprovedBy", fields: [approvedById], references: [id])
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model Incident {
+  id             String           @id @default(cuid())
+  title          String
+  description    String?
+  severity       IncidentSeverity
+  status         IncidentStatus   @default(OPEN)
+  source         IncidentSource
+  relatedAlertId String?
+  startedAt      DateTime         @default(now())
+  resolvedAt     DateTime?
+  metadata       Json?
+  updates        IncidentUpdate[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model IncidentUpdate {
+  id         String    @id @default(cuid())
+  incidentId String
+  incident   Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?     @relation(fields: [authorId], references: [id])
+  body       String
+  createdAt  DateTime  @default(now())
+}
+
+model EnterpriseContract {
+  id                String              @id @default(cuid())
+  name              String
+  metadata          Json?
+  enterpriseInvoices EnterpriseInvoice[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model EnterpriseInvoice {
+  id              String                  @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contractId      String?
+  contract        EnterpriseContract?     @relation(fields: [contractId], references: [id])
+  amountCents     Int
+  currency        String                  @default("gbp")
+  status          EnterpriseInvoiceStatus @default(DRAFT)
+  dueDate         DateTime?
+  stripeInvoiceId String?                 @unique
+  metadata        Json?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+}
+
+model AutonomousRun {
+  id           String          @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  initiatedById String?
+  initiatedBy  User?           @relation(fields: [initiatedById], references: [id])
+  action       String
+  riskLevel    AutonomyRiskLevel
+  status       AutonomyRunStatus @default(PROPOSED)
+  details      Json?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorType   String?
+  action      String
+  resourceId  String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+enum RuntimeProvider {
+  LOCAL
+  FLY
+  RENDER
+  RAILWAY
+  ECS
+  KUBERNETES
+}
+
+enum RuntimeNodeStatus {
+  STARTING
+  HEALTHY
+  DEGRADED
+  DRAINING
+  OFFLINE
+}
+
+enum WorkerPoolStatus {
+  ACTIVE
+  PAUSED
+  DEGRADED
+  DISABLED
+}
+
+enum DataRegion {
+  EU_WEST_1
+  EU_CENTRAL_1
+  US_EAST_1
+  US_WEST_2
+  AP_SOUTHEAST_1
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+enum CertificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum CertificationLevel {
+  BASIC
+  TRUSTED
+  ENTERPRISE
+}
+
+enum ProcurementAssetType {
+  STORE_LISTING
+  TEMPLATE
+  AGENT_LISTING
+  WORKFLOW_TEMPLATE
+  PLUGIN
+  INTEGRATION
+  ENTERPRISE_PLAN
+}
+
+enum ProcurementStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PURCHASED
+  CANCELLED
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+  POSTMORTEM
+}
+
+enum IncidentSource {
+  MANUAL
+  ALERT
+  WORKFLOW_FAILURE
+  RUNTIME_FAILURE
+  PAYMENT_FAILURE
+  SETTLEMENT_FAILURE
+  SECURITY
+}
+
+enum EnterpriseInvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum AutonomyRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AutonomyRunStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  EXECUTED
+  FAILED
 }

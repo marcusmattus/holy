@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: holy-runtime-service
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: node dist/cluster.js
