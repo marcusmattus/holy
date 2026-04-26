@@ -29,6 +29,12 @@ if (root) {
 `.trim()
 }
 
+function createFallbackFiles(prompt: string) {
+  return {
+    '/App.tsx': `export default function App() {\n  return (\n    <main className="p-10">\n      <section data-holy-id="hero">${prompt}</section>\n      <section data-holy-id="pricing">Pricing section</section>\n    </main>\n  )\n}`,
+  }
+}
+
 export async function POST(req: Request) {
   const body = (await req.json()) as { prompt?: unknown }
   const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : ''
@@ -43,16 +49,33 @@ export async function POST(req: Request) {
 Do not import anything.
 Make the output visible and styled with inline styles.
 
+In /App.tsx include major sections with data-holy-id attributes, especially data-holy-id="hero" and data-holy-id="pricing".
+
 Idea: ${prompt}`,
   })
 
-  // Strip markdown code fences if the model included them
-  const code = text.replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim()
-  const hasCode = code.length > 0
+  const cleaned = text.replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim()
 
-  if (hasCode) {
-    return Response.json({ code })
+  if (cleaned.length > 0) {
+    try {
+      const parsed = JSON.parse(cleaned)
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed) &&
+        Object.values(parsed).every((value) => typeof value === 'string')
+      ) {
+        return Response.json({ files: parsed as Record<string, string> })
+      }
+    } catch {
+      // Fall through to code response.
+    }
+
+    return Response.json({ code: cleaned })
   }
 
-  return Response.json({ code: createFallbackCode(prompt) })
+  return Response.json({
+    code: createFallbackCode(prompt),
+    files: createFallbackFiles(prompt),
+  })
 }

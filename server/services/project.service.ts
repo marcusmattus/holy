@@ -12,5 +12,6 @@ export async function createProject(userId: string, name: string) {
 export async function getProjects(userId: string) {
   return prisma.project.findMany({
     where: { userId },
+    orderBy: { createdAt: 'desc' },
   })
 }
