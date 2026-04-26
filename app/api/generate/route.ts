@@ -13,8 +13,25 @@ function getDefaultModel() {
   return githubModels('gpt-4o')
 }
 
+function createFallbackCode(prompt: string) {
+  return `
+const root = document.getElementById('root')
+if (root) {
+  const card = document.createElement('div')
+  card.style.cssText = 'padding:24px;font-family:Inter,Arial,sans-serif'
+  const title = document.createElement('h1')
+  title.textContent = 'Holy Studio'
+  const body = document.createElement('p')
+  body.textContent = ${JSON.stringify(prompt || 'Start building...')}
+  card.append(title, body)
+  root.append(card)
+}
+`.trim()
+}
+
 export async function POST(req: Request) {
-  const { prompt } = await req.json()
+  const body = (await req.json()) as { prompt?: unknown }
+  const prompt = typeof body.prompt === 'string' ? body.prompt : ''
 
   const { text } = await generateText({
     model: getDefaultModel(),
@@ -33,20 +50,5 @@ Idea: ${prompt}`,
     return Response.json({ code })
   }
 
-  const promptText = typeof prompt === 'string' ? prompt : ''
-  const fallbackCode = `
-const root = document.getElementById('root')
-if (root) {
-  const card = document.createElement('div')
-  card.style.cssText = 'padding:24px;font-family:Inter,Arial,sans-serif'
-  const title = document.createElement('h1')
-  title.textContent = 'Holy Studio'
-  const body = document.createElement('p')
-  body.textContent = ${JSON.stringify(promptText || 'Start building...')}
-  card.append(title, body)
-  root.append(card)
-}
-`.trim()
-
-  return Response.json({ code: fallbackCode })
+  return Response.json({ code: createFallbackCode(prompt) })
 }

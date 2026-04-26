@@ -10,12 +10,14 @@ type GenerateResponse = {
 export function useGeneration(initialCode: string) {
   const [code, setCode] = useState(initialCode)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const generate = async (prompt: string) => {
     if (!prompt.trim()) {
       return
     }
 
+    setError(null)
     setLoading(true)
 
     try {
@@ -25,12 +27,18 @@ export function useGeneration(initialCode: string) {
         body: JSON.stringify({ prompt }),
       })
 
+      if (!res.ok) {
+        throw new Error('Failed to generate code. Please try again.')
+      }
+
       const data: GenerateResponse = await res.json()
       const nextCode = data.code ?? data.files?.['/App.tsx']
 
       if (nextCode) {
         setCode(nextCode)
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate code. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -38,6 +46,7 @@ export function useGeneration(initialCode: string) {
 
   return {
     code,
+    error,
     loading,
     setCode,
     generate,

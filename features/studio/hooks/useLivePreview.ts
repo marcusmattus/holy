@@ -12,17 +12,13 @@ export function useLivePreview(code: string) {
     }
 
     doc.open()
-    doc.write(`
-      <html>
-        <body>
-          <div id="root"></div>
-          <script type="module">
-            ${code}
-          </script>
-        </body>
-      </html>
-    `)
+    doc.write('<!doctype html><html><body><div id="root"></div></body></html>')
     doc.close()
+
+    const script = doc.createElement('script')
+    script.type = 'module'
+    script.textContent = code
+    doc.body.appendChild(script)
   }, [code])
 
   return iframeRef
