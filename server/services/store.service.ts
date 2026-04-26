@@ -43,21 +43,25 @@ export async function publishProject(input: {
     where: { projectId: input.projectId },
     update: {
       title: input.title,
+      name: input.title,
       slug,
       description: input.description,
       category: input.category,
       priceType: input.priceType ?? 'FREE',
       priceCents: input.priceCents ?? 0,
+      isPublished: true,
       status: 'PUBLISHED',
     },
     create: {
       projectId: input.projectId,
       title: input.title,
+      name: input.title,
       slug,
       description: input.description,
       category: input.category,
       priceType: input.priceType ?? 'FREE',
       priceCents: input.priceCents ?? 0,
+      isPublished: true,
       status: 'PUBLISHED',
     },
   })
@@ -68,115 +72,28 @@ export async function publishProject(input: {
   })
 
   return listing
-import { PricingModel } from '@prisma/client'
-import { prisma } from '@/server/db/client'
-
-const PROJECT_ID_SUFFIX_LENGTH = 6
-const MAX_SLUG_ATTEMPTS = 20
-
-function slugify(value: string) {
-  const input = value.toLowerCase()
-  let result = ''
-  let previousWasDash = false
-
-  for (const char of input) {
-    const isAlphaNumeric =
-      (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')
-
-    if (isAlphaNumeric) {
-      result += char
-      previousWasDash = false
-      continue
-    }
-
-    if (!previousWasDash) {
-      result += '-'
-      previousWasDash = true
-    }
-  }
-
-  while (result.startsWith('-')) {
-    result = result.slice(1)
-  }
-
-  while (result.endsWith('-')) {
-    result = result.slice(0, -1)
-  }
-
-  return result
-}
-
-async function resolveUniqueSlug(baseSlug: string, projectId: string) {
-  const fallbackSlug = baseSlug || 'holy-app'
-  const projectSuffix = projectId.slice(-PROJECT_ID_SUFFIX_LENGTH)
-  let candidate = `${fallbackSlug}-${projectSuffix}`
-  let attempt = 1
-
-  while (
-    attempt <= MAX_SLUG_ATTEMPTS &&
-    (await prisma.storeListing.findUnique({ where: { slug: candidate } }))
-  ) {
-    candidate = `${fallbackSlug}-${projectSuffix}-${attempt}`
-    attempt += 1
-  }
-
-  if (attempt > MAX_SLUG_ATTEMPTS) {
-    throw new Error('Failed to generate a unique listing slug')
-  }
-
-  return candidate
-}
-
-export async function publishProjectListing(input: {
-  projectId: string
-  name: string
-  description: string
-  price?: number | null
-  pricingModel?: PricingModel
-}) {
-  const existing = await prisma.storeListing.findUnique({
-    where: { projectId: input.projectId },
-  })
-  const baseSlug = slugify(input.name)
-  const slug = existing?.slug ?? (await resolveUniqueSlug(baseSlug, input.projectId))
-  const pricingModel =
-    input.pricingModel ?? (input.price && input.price > 0 ? PricingModel.PAID : PricingModel.FREE)
-
-  return prisma.storeListing.upsert({
-    where: { projectId: input.projectId },
-    update: {
-      name: input.name,
-      description: input.description,
-      price: input.price ?? null,
-      pricingModel,
-      isPublished: true,
-    },
-    create: {
-      projectId: input.projectId,
-      name: input.name,
-      slug,
-      description: input.description,
-      price: input.price ?? null,
-      pricingModel,
-      isPublished: true,
-    },
-  })
 }
 
 export async function listPublishedListings() {
   return prisma.storeListing.findMany({
-    where: { status: 'PUBLISHED' },
-    include: { project: true, installs: true },
+    where: {
+      OR: [{ status: 'PUBLISHED' }, { isPublished: true }],
+    },
     orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: { installs: true },
+      },
+    },
   })
 }
 
 export async function getListingBySlug(slug: string) {
-  return prisma.storeListing.findUnique({
-    where: { slug },
-    include: { project: { include: { files: true } }, installs: true },
-    where: { isPublished: true },
-    orderBy: { createdAt: 'desc' },
+  return prisma.storeListing.findFirst({
+    where: {
+      slug,
+      OR: [{ status: 'PUBLISHED' }, { isPublished: true }],
+    },
     include: {
       _count: {
         select: { installs: true },
@@ -210,7 +127,7 @@ export async function installListing(input: {
     data: {
       listingId: input.listingId,
       projectId: input.projectId,
-      userId: input.userId,
+      userId: input.userId ?? 'anonymous',
       source: input.source,
     },
   })

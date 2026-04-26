@@ -54,6 +54,7 @@ export async function createDeployment(input: DeploymentInput) {
   await prisma.analyticsEvent.create({
     data: {
       eventType: 'DEPLOYMENT_CREATED',
+      eventName: 'DEPLOYMENT_CREATED',
       projectId: input.projectId,
       metadata: {
         provider: created.provider,

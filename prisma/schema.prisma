@@ -7,16 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id                   String                @id @default(cuid())
-  email                String                @unique
-  projects             Project[]
   payouts              Payout[]
   creatorPayoutAccount CreatorPayoutAccount?
-  revenueShares        RevenueShare[]        @relation("RevenueShareRecipient")
   ownedWorkspaces      Workspace[]           @relation("WorkspaceOwner")
   workspaceMemberships WorkspaceMember[]
-  createdAt            DateTime              @default(now())
   id                   String             @id @default(cuid())
   email                String             @unique
   projects             Project[]
@@ -27,44 +23,10 @@ model User {
   referralsAsReferrer  Referral[]         @relation("ReferralReferrer")
   referralsAsReferred  Referral[]         @relation("ReferralReferred")
   installs             Install[]
+  revenueScenarios     RevenueScenario[]
+  analyticsEvents      AnalyticsEvent[]
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-}
-
-model Project {
-  id           String           @id @default(cuid())
-  name         String
-  userId       String
-  user         User             @relation(fields: [userId], references: [id])
-  workspaceId  String?
-  workspace    Workspace?       @relation(fields: [workspaceId], references: [id])
-  versions     ProjectVersion[]
-  listings     StoreListing[]
-  deployments  Deployment[]
-  analytics    AnalyticsDailyAggregate[]
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  id        String    @id @default(cuid())
-  email     String    @unique
-  projects  Project[]
-  installs  Install[]
-  createdAt DateTime  @default(now())
-}
-
-model Project {
-  id          String           @id @default(cuid())
-  name        String
-  slug        String?          @unique
-  description String?
-  userId      String
-  user        User             @relation(fields: [userId], references: [id])
-  status      ProjectStatus    @default(DRAFT)
-  files       ProjectFile[]
-  versions    ProjectVersion[]
-  listing     StoreListing?
-  deployments Deployment[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
 }
 
 model ProjectFile {
@@ -79,90 +41,23 @@ model ProjectFile {
   @@unique([projectId, path])
 }
 
-model ProjectVersion {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  label     String?
-  prompt    String?
-  summary   String?
-  filesJson Json
-  createdAt DateTime @default(now())
-}
-
-model StoreListing {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  slug        String   @unique
-  name        String
-  description String
-  category    String   @default("General")
-  price       Float?
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  analytics   AnalyticsDailyAggregate[]
-  id                String                @id @default(cuid())
-  projectId         String
-  project           Project               @relation(fields: [projectId], references: [id])
-  name              String
-  title             String
-  slug              String                @unique
-  description       String
-  price             Float?
-  priceType         StoreListingPriceType @default(FREE)
-  priceCents        Int                   @default(0)
-  currency          String                @default("gbp")
-  isPublished       Boolean               @default(false)
-  installs          Install[]
-  purchases         Purchase[]
-  revenueShareRules RevenueShareRule[]
-  referrals         Referral[]
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  id          String         @id @default(cuid())
-  projectId   String         @unique
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title       String
-  slug        String         @unique
-  description String
-  category    String?
-  priceType   PriceType      @default(FREE)
-  priceCents  Int            @default(0)
-  status      ListingStatus  @default(DRAFT)
-  installs    Install[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-}
-
-model Install {
-  id        String       @id @default(cuid())
-  listingId String
-  listing   StoreListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User         @relation(fields: [userId], references: [id])
-  createdAt DateTime     @default(now())
-  id               String            @id @default(cuid())
-  email            String            @unique
-  projects         Project[]
-  installs         Install[]
-  rewardLedgers    RewardLedger[]
-  revenueScenarios RevenueScenario[]
-  analyticsEvents  AnalyticsEvent[]
-  createdAt        DateTime          @default(now())
-}
-
 model Project {
   id               String            @id @default(cuid())
   name             String
+  slug             String?           @unique
   userId           String
   user             User              @relation(fields: [userId], references: [id])
+  workspaceId      String?
+  workspace        Workspace?        @relation(fields: [workspaceId], references: [id])
+  status           ProjectStatus     @default(DRAFT)
+  files            ProjectFile[]
   versions         ProjectVersion[]
   listings         StoreListing[]
   installs         Install[]
   rewardLedgers    RewardLedger[]
   revenueScenarios RevenueScenario[]
   analyticsEvents  AnalyticsEvent[]
+  analyticsDailyAggregates AnalyticsDailyAggregate[]
   deployments      Deployment[]
   createdAt        DateTime          @default(now())
 }
@@ -171,9 +66,12 @@ model ProjectVersion {
   id         String   @id @default(cuid())
   projectId  String
   project    Project  @relation(fields: [projectId], references: [id])
+  label      String?
   prompt     String?
+  summary    String?
   spec       String?
   fileTree   Json?
+  filesJson  Json?
   code       String
   createdAt  DateTime @default(now())
 }
@@ -183,13 +81,24 @@ model StoreListing {
   projectId      String           @unique
   project        Project          @relation(fields: [projectId], references: [id])
   name           String
+  title          String
   slug           String           @unique
   description    String
+  category       String           @default("General")
   price          Float?
+  priceType      StoreListingPriceType @default(FREE)
+  priceCents     Int              @default(0)
+  currency       String           @default("gbp")
   pricingModel   PricingModel     @default(FREE)
+  status         ListingStatus    @default(DRAFT)
   isPublished    Boolean          @default(false)
   installs       Install[]
+  purchases      Purchase[]
+  revenueShares  RevenueShare[]
+  revenueShareRules RevenueShareRule[]
+  referrals      Referral[]
   rewardLedgers  RewardLedger[]
+  analytics      AnalyticsDailyAggregate[]
   analyticsEvents AnalyticsEvent[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -234,32 +143,6 @@ model Payout {
   updatedAt        DateTime     @updatedAt
 }
 
-model RevenueShare {
-  id            String             @id @default(cuid())
-  recipientId   String
-  recipient     User               @relation("RevenueShareRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
-  listingId     String?
-  amountCents   Int
-  currency      String             @default("gbp")
-  status        RevenueShareStatus @default(AVAILABLE)
-  payoutId      String?
-  referralCode  String?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  payout        Payout?            @relation(fields: [payoutId], references: [id])
-}
-
-model AnalyticsEvent {
-  id         String   @id @default(cuid())
-  eventType  String
-  projectId  String?
-  listingId  String?
-  userId     String?
-  revenueCents Int    @default(0)
-  metadata   Json?
-  createdAt  DateTime @default(now())
-}
-
 model AnalyticsDailyAggregate {
   id           String   @id @default(cuid())
   projectId    String?
@@ -300,16 +183,6 @@ model WorkspaceMember {
   createdAt   DateTime      @default(now())
 
   @@unique([workspaceId, userId])
-}
-
-model RewardLedger {
-  id                  String   @id @default(cuid())
-  userId              String
-  amountCents         Int
-  currency            String   @default("gbp")
-  settlementProvider  String?
-  settlementTxHash    String?
-  createdAt           DateTime @default(now())
 }
 
 model AppInstall {
@@ -354,29 +227,11 @@ enum PayoutStatus {
   CANCELLED
 }
 
-enum RevenueShareStatus {
-  AVAILABLE
-  PENDING
-  PAID_OUT
-}
-
 enum WorkspaceRole {
   OWNER
   ADMIN
   MEMBER
   VIEWER
-}
-
-model Install {
-  id        String       @id @default(cuid())
-  listingId String
-  listing   StoreListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  @@unique([listingId, userId])
 }
 
 model Purchase {
@@ -413,30 +268,19 @@ model RevenueShare {
   id          String             @id @default(cuid())
   purchaseId  String
   purchase    Purchase           @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     StoreListing?      @relation(fields: [listingId], references: [id])
   recipientId String
   recipient   User               @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   role        RevenueShareRole
   amountCents Int
   currency    String             @default("gbp")
   status      RevenueShareStatus @default(PENDING)
+  referralCode String?
+  payoutId    String?
+  payout      Payout?            @relation(fields: [payoutId], references: [id])
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
-}
-
-model RewardLedger {
-  id              String           @id @default(cuid())
-  userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceType      RewardSourceType
-  sourceId        String?
-  amount          Int
-  currency        RewardCurrency   @default(POINTS)
-  status          RewardStatus     @default(PENDING)
-  description     String?
-  metadata        Json?
-  settlementTxHash String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
 }
 
 model Referral {
@@ -506,6 +350,8 @@ enum ReferralStatus {
   PENDING
   CONVERTED
   EXPIRED
+}
+
 enum ProjectStatus {
   DRAFT
   BUILDING
@@ -525,34 +371,45 @@ enum ListingStatus {
   PUBLISHED
   UNLISTED
   ARCHIVED
+}
+
 model Install {
   id          String       @id @default(cuid())
   listingId   String
   listing     StoreListing @relation(fields: [listingId], references: [id])
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id])
-  userId      String?
-  user        User?        @relation(fields: [userId], references: [id])
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id])
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
   pricePaid   Float?
   source      String?
   createdAt   DateTime     @default(now())
 
+  @@unique([listingId, userId])
   @@index([userId, listingId, projectId])
 }
 
 model RewardLedger {
-  id          String         @id @default(cuid())
-  userId      String
-  user        User           @relation(fields: [userId], references: [id])
-  projectId   String?
-  project     Project?       @relation(fields: [projectId], references: [id])
-  listingId   String?
-  listing     StoreListing?  @relation(fields: [listingId], references: [id])
-  kind        RewardKind
-  amountCents Int
-  currency    String         @default("USD")
-  note        String?
-  createdAt   DateTime       @default(now())
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  projectId        String?
+  project          Project?         @relation(fields: [projectId], references: [id])
+  listingId        String?
+  listing          StoreListing?    @relation(fields: [listingId], references: [id])
+  sourceType       RewardSourceType @default(MANUAL)
+  sourceId         String?
+  kind             RewardKind       @default(CREATOR_EARNING)
+  amount           Int              @default(0)
+  amountCents      Int              @default(0)
+  currency         RewardCurrency   @default(POINTS)
+  status           RewardStatus     @default(PENDING)
+  description      String?
+  note             String?
+  metadata         Json?
+  settlementTxHash String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }
 
 model RevenueScenario {
@@ -576,8 +433,10 @@ model AnalyticsEvent {
   project    Project?           @relation(fields: [projectId], references: [id])
   listingId  String?
   listing    StoreListing?      @relation(fields: [listingId], references: [id])
+  eventType  String?
   eventName  AnalyticsEventName
   source     String?
+  revenueCents Int              @default(0)
   metadata   Json?
   createdAt  DateTime           @default(now())
 }

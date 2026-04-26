@@ -4,6 +4,8 @@ import { createOpenAI, openai } from '@ai-sdk/openai'
 import { assertAtLeastOneLLMProvider, getEnv } from '@/lib/env'
 import { logger } from '@/lib/logger'
 
+export { generateText }
+
 export type AIProvider = 'openai' | 'anthropic'
 
 const githubModels = createOpenAI({

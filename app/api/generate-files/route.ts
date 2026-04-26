@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateText } from '@/lib/ai'
+import { callLLM } from '@/lib/ai'
 import { defaultHolyFiles } from '@/features/studio/lib/default-files'
 import { extractJsonObject, toHolyFileMap } from '@/features/studio/lib/file-utils'
 
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json()
 
-    const raw = await generateText(`
+    const raw = await callLLM(`
 Generate a Sandpack React TypeScript file map for this app idea.
 Return ONLY valid JSON.
 Use this shape:

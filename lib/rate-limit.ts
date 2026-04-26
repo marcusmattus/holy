@@ -33,7 +33,8 @@ export function checkRateLimit({ key, limit, windowMs }: RateLimitConfig) {
 export function getRequestRateLimitKey(req: Request, scope: string) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   return `${scope}:${ip}`
-// Default policy: max 30 requests per 60-second rolling window per key.
+}
+
 const WINDOW_MS = 60_000
 const MAX_REQUESTS = 30
 const MAX_BUCKETS_BEFORE_CLEANUP = 1000

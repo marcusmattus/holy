@@ -120,7 +120,7 @@ export async function getCreatorPayoutSummary(userId: string) {
     currency: getPayoutCurrency(),
     topAppsByRevenue: topApps.map((row) => ({
       listingId: row.listingId,
-      revenueCents: row._sum.amountCents ?? 0,
+      revenueCents: row._sum?.amountCents ?? 0,
     })),
   }
 }
