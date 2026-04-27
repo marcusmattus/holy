@@ -38,6 +38,12 @@ export default function ProjectPage({
           >
             Open Editor
           </Link>
+          <Link
+            href={`/projects/${projectId}/deploy`}
+            className="rounded-lg border border-[#D4AF37]/40 px-4 py-2 text-sm font-semibold text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors"
+          >
+            Deploy
+          </Link>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4">
