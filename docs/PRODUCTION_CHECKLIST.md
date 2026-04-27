@@ -34,6 +34,7 @@
 - Vercel project configured
 - Environment variables set
 - Production URL tested
+- Primary region pinned to `iad1` (US East) for consistent latency and residency defaults
 
 ## Future Required
 - Worker queues (BullMQ)

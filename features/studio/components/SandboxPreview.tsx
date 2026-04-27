@@ -14,7 +14,7 @@ export default function SandboxPreview({ code }: { code: string }) {
       sandbox="allow-scripts allow-forms allow-popups allow-modals"
       referrerPolicy="no-referrer"
       srcDoc={`
-        <!doctype html>
+        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8" />

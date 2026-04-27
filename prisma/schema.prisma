@@ -1070,3 +1070,194 @@ enum AgentRunStatus {
   COMPLETED
   FAILED
 }
+
+model RegionalDataShard {
+  id               String              @id @default(cuid())
+  region           DataRegion
+  name             String
+  databaseUrlRef   String
+  storageBucketRef String?
+  status           RegionalShardStatus @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model MarketplaceEmbedding {
+  id          String                     @id @default(cuid())
+  targetType  MarketplaceEmbeddingTarget
+  targetId    String
+  contentHash String
+  embedding   Json
+  metadata    Json?
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+
+  @@unique([targetType, targetId])
+}
+
+model PluginListing {
+  id          String         @id @default(cuid())
+  creatorId   String
+  creator     User           @relation("PluginCreator", fields: [creatorId], references: [id])
+  title       String
+  slug        String         @unique
+  description String
+  category    String?
+  manifest    Json
+  priceType   PriceType      @default(FREE)
+  priceCents  Int            @default(0)
+  status      PluginStatus   @default(DRAFT)
+  installs    PluginInstall[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model PluginInstall {
+  id            String              @id @default(cuid())
+  pluginId      String
+  plugin        PluginListing       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  projectId     String
+  project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  installedById String
+  installedBy   User                @relation("PluginInstaller", fields: [installedById], references: [id])
+  config        Json?
+  status        PluginInstallStatus @default(ACTIVE)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model ComplianceControl {
+  id          String                  @id @default(cuid())
+  framework   ComplianceFramework
+  key         String
+  title       String
+  description String
+  status      ComplianceControlStatus @default(NOT_STARTED)
+  ownerId     String?
+  owner       User?                   @relation("ComplianceControlOwner", fields: [ownerId], references: [id])
+  evidence    ComplianceEvidence[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
+
+model ComplianceEvidence {
+  id           String            @id @default(cuid())
+  controlId    String
+  control      ComplianceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  title        String
+  url          String?
+  metadata     Json?
+  uploadedById String?
+  uploadedBy   User?             @relation("ComplianceEvidenceUploader", fields: [uploadedById], references: [id])
+  createdAt    DateTime          @default(now())
+}
+
+model EnterpriseContract {
+  id          String                   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan        WorkspacePlan
+  status      EnterpriseContractStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  mrrCents    Int                      @default(0)
+  terms       Json?
+  slaConfig   Json?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+}
+
+model AutonomyPolicy {
+  id                  String           @id @default(cuid())
+  workspaceId         String?
+  workspace           Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  scope               AutonomyScope
+  maxRisk             SuggestionImpact @default(LOW)
+  autoApplyAllowed    Boolean          @default(false)
+  requiresApprovalFor Json?
+  disabledActions     String[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+enum DataRegion {
+  US
+  EU
+  APAC
+}
+
+enum RegionalShardStatus {
+  ACTIVE
+  DEGRADED
+  DISABLED
+}
+
+enum MarketplaceEmbeddingTarget {
+  STORE_LISTING
+  TEMPLATE
+  AGENT_LISTING
+  WORKFLOW_TEMPLATE
+  INTEGRATION_LISTING
+  CREATOR_PROFILE
+}
+
+enum PriceType {
+  FREE
+  PAID
+}
+
+enum PluginStatus {
+  DRAFT
+  PUBLISHED
+  UNLISTED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum PluginInstallStatus {
+  ACTIVE
+  DISABLED
+  REMOVED
+}
+
+enum ComplianceFramework {
+  SOC2
+  GDPR
+  ISO27001
+}
+
+enum ComplianceControlStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  READY
+  NEEDS_REVIEW
+  COMPLETE
+}
+
+enum WorkspacePlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum EnterpriseContractStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  CANCELLED
+}
+
+enum AutonomyScope {
+  WORKSPACE
+  PROJECT
+  AGENT
+  WORKFLOW
+}
+
+enum SuggestionImpact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
