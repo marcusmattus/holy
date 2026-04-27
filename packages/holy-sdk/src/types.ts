@@ -1,27 +1,41 @@
-export type SelfHealingRun = {
-  id: string
+export interface RegionHealth {
+  region: string
   status: string
-  triggerType: string
-  riskLevel: string
+  priority: number
+  lastHealthCheckAt?: string
 }
 
-export type OptimizationCampaign = {
+export interface FederatedRound {
   id: string
   name: string
-  goal: string
+  status: string
+  target: string
+}
+
+export interface OptimizationSchedule {
+  id: string
+  campaignId: string
+  cron: string
+  enabled: boolean
+}
+
+export interface MarketplaceAbuseSignal {
+  id: string
+  targetType: string
+  targetId: string
+  signalType: string
+  score: number
+}
+
+export interface StatusComponent {
+  id: string
+  name: string
+  slug: string
   status: string
 }
 
-export type IntelligenceRecommendation = {
-  id: string
-  title: string
-  description: string
-  confidence: number
-  type: string
-}
-
-export type MarketplaceRanking = {
-  id: string
-  score: number
-  publicSignals: { scoreBand: string }
+export interface TransparencyReportResponse {
+  approvedForPublish: boolean
+  generatedAt: string
+  sections: Record<string, unknown>
 }

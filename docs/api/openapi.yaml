@@ -29,3 +29,36 @@ paths:
   /api/improvement-bundles/{bundleId}/apply:
     post:
       summary: Apply improvement bundle
+  title: Holy Phase 18 API
+  version: 0.1.0
+paths:
+  /api/admin/regions:
+    get:
+      summary: List regional control plane health
+  /api/admin/regions/{region}/failover:
+    post:
+      summary: Propose or execute failover with approval gates
+  /api/admin/federated/rounds:
+    get:
+      summary: List federated rounds
+  /api/optimization/campaigns/{campaignId}/schedule:
+    post:
+      summary: Create optimization schedule under policy controls
+  /api/admin/marketplace/abuse:
+    get:
+      summary: List abuse signals and enforcement actions
+  /api/admin/tenants/migration-runs/{runId}/execute:
+    post:
+      summary: Execute approved tenant migration run
+  /api/status:
+    get:
+      summary: Get public component and incident status
+  /api/admin/transparency/generate:
+    post:
+      summary: Generate aggregate transparency report (admin)
+  /api/admin/settlement/reconciliation:
+    post:
+      summary: Run settlement pilot reconciliation (admin)
+  /api/workspaces/{workspaceId}/intelligence-policy:
+    patch:
+      summary: Update workspace intelligence policy
