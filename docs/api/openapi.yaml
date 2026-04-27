@@ -1,5 +1,34 @@
 openapi: 3.1.0
 info:
+  title: Holy Phase 17 API
+  version: 0.1.0
+paths:
+  /api/admin/self-healing/runs:
+    get:
+      summary: List self-healing runs
+    post:
+      summary: Create self-healing run
+  /api/optimization/campaigns:
+    post:
+      summary: Create optimization campaign
+  /api/optimization/campaigns/{campaignId}/run:
+    post:
+      summary: Run optimization campaign
+  /api/intelligence/recommendations:
+    get:
+      summary: List intelligence recommendations
+  /api/marketplace/rankings:
+    post:
+      summary: Query marketplace rankings
+  /api/admin/incidents/{incidentId}/postmortem:
+    post:
+      summary: Generate postmortem draft
+  /api/admin/tenants/{workspaceId}/migration-plan:
+    post:
+      summary: Create tenant migration plan
+  /api/improvement-bundles/{bundleId}/apply:
+    post:
+      summary: Apply improvement bundle
   title: Holy Phase 18 API
   version: 0.1.0
 paths:

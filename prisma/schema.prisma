@@ -886,3 +886,187 @@ enum PublicIncidentStatus {
   MONITORING
   RESOLVED
 }
+
+model Workspace {
+  id                  String                     @id @default(cuid())
+  name                String
+  strictDataResidency Boolean                    @default(false)
+  intelligenceOptOut  Boolean                    @default(false)
+  recommendations     IntelligenceRecommendation[]
+  campaigns           OptimizationCampaign[]
+  bundles             ImprovementBundle[]
+  createdAt           DateTime                   @default(now())
+}
+
+model SelfHealingRun {
+  id              String                 @id @default(cuid())
+  triggerType     SelfHealingTriggerType
+  sourceType      String?
+  sourceId        String?
+  status          SelfHealingRunStatus   @default(PENDING)
+  diagnosis       Json?
+  proposedActions Json?
+  appliedActions  Json?
+  riskLevel       SuggestionImpact       @default(MEDIUM)
+  error           String?
+  approvedById    String?
+  approvedBy      User?                  @relation("SelfHealingApprover", fields: [approvedById], references: [id])
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+}
+
+model GlobalPatternSignal {
+  id         String           @id @default(cuid())
+  signalType GlobalSignalType
+  scope      String
+  value      Float
+  confidence Float            @default(0)
+  sampleSize Int              @default(0)
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+}
+
+model IntelligenceRecommendation {
+  id          String                           @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?                       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?                         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        IntelligenceRecommendationType
+  title       String
+  description String
+  confidence  Float                            @default(0)
+  evidence    Json?
+  status      SuggestionStatus                 @default(PENDING)
+  createdAt   DateTime                         @default(now())
+  updatedAt   DateTime                         @updatedAt
+}
+
+model OptimizationCampaign {
+  id            String                      @id @default(cuid())
+  workspaceId   String?
+  workspace     Workspace?                  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectId     String?
+  project       Project?                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listingId     String?
+  listing       StoreListing?               @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  name          String
+  goal          OptimizationGoal
+  status        OptimizationCampaignStatus  @default(DRAFT)
+  policy        Json?
+  successMetric String?
+  runs          OptimizationCampaignRun[]
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+}
+
+model OptimizationCampaignRun {
+  id              String               @id @default(cuid())
+  campaignId      String
+  campaign        OptimizationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  status          AgentRunStatus       @default(PENDING)
+  input           Json?
+  output          Json?
+  proposedActions Json?
+  appliedActions  Json?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model ImprovementBundle {
+  id          String            @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     StoreListing?     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  title       String
+  summary     String
+  actions     Json
+  riskLevel   SuggestionImpact  @default(MEDIUM)
+  status      SuggestionStatus  @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum SelfHealingTriggerType {
+  ALERT
+  INCIDENT
+  SCHEDULED_CHECK
+  MANUAL
+  WORKFLOW_FAILURE
+  RUNTIME_FAILURE
+  SETTLEMENT_FAILURE
+  SEARCH_INDEX_FAILURE
+}
+
+enum SelfHealingRunStatus {
+  PENDING
+  DIAGNOSING
+  PROPOSED
+  APPROVED
+  APPLIED
+  FAILED
+  DISMISSED
+}
+
+enum GlobalSignalType {
+  CONVERSION_BENCHMARK
+  TEMPLATE_FORK_VELOCITY
+  AGENT_SUCCESS_RATE
+  WORKFLOW_COMPLETION_RATE
+  PLUGIN_RETENTION
+  SEARCH_INTENT_CLUSTER
+  MARKETPLACE_TRUST_SIGNAL
+}
+
+enum IntelligenceRecommendationType {
+  APP_OPTIMIZATION
+  LISTING_OPTIMIZATION
+  TEMPLATE_RECOMMENDATION
+  AGENT_RECOMMENDATION
+  WORKFLOW_RECOMMENDATION
+  PLUGIN_RECOMMENDATION
+  PRICING_EXPERIMENT
+  DEPLOYMENT_RECOMMENDATION
+}
+
+enum OptimizationGoal {
+  STORE_CONVERSION
+  APP_ONBOARDING
+  TEMPLATE_FORK_RATE
+  AGENT_TRUST
+  WORKFLOW_COMPLETION
+  PRICING_CONVERSION
+  RETENTION
+}
+
+enum OptimizationCampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum SuggestionImpact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SuggestionStatus {
+  PENDING
+  APPROVED
+  APPLIED
+  REJECTED
+}
+
+enum AgentRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
