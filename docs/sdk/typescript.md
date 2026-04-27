@@ -1,12 +1,14 @@
-# Holy TypeScript SDK
+# Holy SDK (TypeScript)
 
-## Added client methods
+Phase 18 methods:
 
-- `holy.runtime.executions.get()`
-- `holy.workers.health()`
-- `holy.plugins.list()`
-- `holy.plugins.install()`
-- `holy.search.semantic()`
-- `holy.compliance.controls.list()`
-- `holy.enterprise.contracts.get()`
-- `holy.autonomy.policies.update()`
+- `holy.regions.health()`
+- `holy.regions.failover.propose(region, payload)`
+- `holy.federated.rounds.list()`
+- `holy.optimization.schedules.create(campaignId, payload)`
+- `holy.marketplace.abuse.signals.list()`
+- `holy.tenants.migrations.execute(runId)`
+- `holy.status.components.list()`
+- `holy.trust.transparency.get()`
+- `holy.settlement.reconciliation.run()`
+- `holy.intelligence.policies.update(workspaceId, payload)`
