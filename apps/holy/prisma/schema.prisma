@@ -18,9 +18,11 @@ model User {
   walletAddress  String?
   holyosUserId   String    @unique
   plan           Plan      @default(FREE)
-  projects       Project[]
-  reviews        Review[]
-  createdAt      DateTime  @default(now())
+  projects         Project[]
+  reviews          Review[]
+  rewardLedger     RewardLedger[]
+  revenueScenarios RevenueScenario[]
+  createdAt        DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
 
@@ -44,9 +46,10 @@ model Project {
   holyosProjectId String        @unique
   userId        String
   user          User            @relation(fields: [userId], references: [id])
-  versions      ProjectVersion[]
-  storeEntry    StoreEntry?
-  createdAt     DateTime        @default(now())
+  versions         ProjectVersion[]
+  storeEntry       StoreEntry?
+  analyticsEvents  AnalyticsEvent[]
+  createdAt        DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
 
@@ -91,4 +94,66 @@ model Review {
   rating        Int
   comment       String?
   createdAt     DateTime    @default(now())
+}
+
+// ─── Holystic Protocol ────────────────────────────────────────────────────────
+
+model RewardLedger {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  type          RewardType
+  amountUsdc    Float
+  amountHol     Float         @default(0)
+  description   String?
+  txHash        String?
+  projectId     String?
+  status        RewardStatus  @default(PENDING)
+  settledAt     DateTime?
+  createdAt     DateTime      @default(now())
+}
+
+enum RewardType {
+  INSTALL_BOUNTY
+  REVENUE_SHARE
+  REFERRAL
+  CREATOR_GRANT
+  PROTOCOL_BONUS
+}
+
+enum RewardStatus {
+  PENDING
+  PROCESSING
+  SETTLED
+  FAILED
+}
+
+// ─── Holy Insights ────────────────────────────────────────────────────────────
+
+model RevenueScenario {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  projectId       String?
+  name            String
+  monthlyVisitors Int      @default(1000)
+  conversionRate  Float    @default(0.02)
+  avgOrderValue   Float    @default(49)
+  revenueSharePct Float    @default(0.15)
+  monthlyRevenue  Float    @default(0)
+  annualRevenue   Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  event     String
+  path      String?
+  referrer  String?
+  country   String?
+  device    String?
+  createdAt DateTime @default(now())
 }

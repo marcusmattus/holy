@@ -62,8 +62,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       where: { storeEntryId },
     })
 
+    type ReviewRow = (typeof allReviews)[number]
     const avgRating =
-      allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+      allReviews.reduce((sum: number, r: ReviewRow) => sum + r.rating, 0) / allReviews.length
     const reviewCount = allReviews.length
 
     await prisma.storeEntry.update({
